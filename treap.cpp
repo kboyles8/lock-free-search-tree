@@ -1,3 +1,11 @@
+/**
+ * @file treap.cpp
+ * 
+ * An immutable treap that stores integers. The immutable operations are thread safe.
+ * Algorithms based on pseudo-code from https://algorithmtutor.com/Data-Structures/Tree/Treaps/
+ * 
+ */
+
 #include "treap.h"
 
 Treap::Treap() {};
