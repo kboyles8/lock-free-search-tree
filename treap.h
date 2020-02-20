@@ -18,6 +18,10 @@ const TreapIndex ControlNode = TREAP_NODES;  // The extra node allocated beyond 
 const int NegInfinity = numeric_limits<int>::min();
 const int PosInfinity = numeric_limits<int>::max();
 
+// Random generator
+thread_local mt19937 randEngine {(unsigned int)time(NULL)};
+uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
+
 class Treap {
 private:
     struct TreapNode {
@@ -38,10 +42,6 @@ private:
     int size {0};
     TreapNode nodes[TREAP_NODES + 1];
     TreapIndex root {NullNode};
-
-    // Random generator
-    mt19937 randEngine {(unsigned int)time(NULL)};
-    uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
 
     Treap(const Treap &other);
 
