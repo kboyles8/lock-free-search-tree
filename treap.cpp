@@ -110,7 +110,7 @@ void Treap::rightRotate(TreapIndex index) {
     nodes[leftIndex].parent = parentIndex;
     if (parentIndex == NullNode) {
         // This node is the new root
-        root = index;
+        root = leftIndex;
     }
     else {
         // Determine if the target node was the left or right child of the parent
@@ -148,7 +148,7 @@ void Treap::leftRotate(TreapIndex index) {
     nodes[rightIndex].parent = parentIndex;
     if (parentIndex == NullNode) {
         // This node is the new root
-        root = index;
+        root = rightIndex;
     }
     else {
         // Determine if the target node was the left or right child of the parent
