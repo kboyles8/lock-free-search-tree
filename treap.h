@@ -13,6 +13,7 @@ using namespace std;
 
 typedef int TreapIndex;
 const TreapIndex NullNode = -1;
+const TreapIndex ControlNode = TREAP_NODES;  // The extra node allocated beyond the size of the treap
 
 const int NegInfinity = numeric_limits<int>::min();
 const int PosInfinity = numeric_limits<int>::max();
@@ -28,6 +29,12 @@ private:
         TreapIndex right {NullNode};
     };
 
+    struct TreapTransferInfo {
+        bool isLeftChild;
+        TreapIndex newParentIndex;
+        TreapIndex originalIndex;
+    };
+
     int size {0};
     TreapNode nodes[TREAP_NODES + 1];
     TreapIndex root {NullNode};
@@ -41,6 +48,7 @@ private:
     void moveNode(TreapIndex srcIndex, TreapIndex dstIndex);
 
     TreapIndex createNewNode(int val);
+    TreapIndex transferNodesFrom(Treap *other, TreapIndex rootIndex);
 
     void bstInsert(TreapIndex index);
     TreapIndex bstFind(int val);
@@ -61,6 +69,9 @@ public:
     Treap *immutableRemove(int val);
 
     bool contains(int val);
+
+    static Treap *merge(Treap *left, Treap *right);
+    void split(Treap **left, Treap **right);
 };
 
 #endif /* TREAP_H */

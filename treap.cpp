@@ -91,6 +91,75 @@ TreapIndex Treap::createNewNode(int val) {
 }
 
 /**
+ * Transfers all nodes from another treap to the current treap, starting from a given index.
+ * This is different from copying the treap or calling insert with each node, as it preserves the original structure of the transferred nodes.
+ * 
+ * @param other
+ * The treap to transfer from
+ * 
+ * @param rootIndex
+ * The index to begin transferring from
+ * 
+ * @return TreapIndex
+ * The index of the root of the transferred nodes, in the current treap
+ */
+TreapIndex Treap::transferNodesFrom(Treap *other, TreapIndex rootIndex) {
+    TreapIndex transferRoot;
+    vector<TreapTransferInfo> nodesToTransfer;
+
+    // Add the root node to be transferred
+    nodesToTransfer.push_back(TreapTransferInfo {
+        .isLeftChild = false,
+        .newParentIndex = NullNode,
+        .originalIndex = rootIndex
+    });
+
+    // Begin transferring nodes
+    while (!nodesToTransfer.empty()) {
+        TreapTransferInfo currentInfo = nodesToTransfer.back();
+        nodesToTransfer.pop_back();
+
+        // Insert this node in the next available space
+        TreapIndex newIndex = createNewNode(other->nodes[currentInfo.originalIndex].val);
+
+        // Set the parent node if applicable
+        if (currentInfo.newParentIndex != NullNode) {
+            nodes[newIndex].parent = currentInfo.newParentIndex;
+
+            if (currentInfo.isLeftChild) {
+                nodes[currentInfo.newParentIndex].left = newIndex;
+            }
+            else {
+                nodes[currentInfo.newParentIndex].right = newIndex;
+            }
+        }
+        else {
+            // This is the first node transferred (the "root"). Save this index.
+            transferRoot = newIndex;
+        }
+
+        // Add any children of this node to be transferred
+        if (other->nodes[currentInfo.originalIndex].left != NullNode) {
+            nodesToTransfer.push_back(TreapTransferInfo {
+                .isLeftChild = true,
+                .newParentIndex = newIndex,
+                .originalIndex = other->nodes[currentInfo.originalIndex].left
+            });
+        }
+
+        if (other->nodes[currentInfo.originalIndex].right != NullNode) {
+            nodesToTransfer.push_back(TreapTransferInfo {
+                .isLeftChild = false,
+                .newParentIndex = newIndex,
+                .originalIndex = other->nodes[currentInfo.originalIndex].right
+            });
+        }
+    }
+
+    return transferRoot;
+}
+
+/**
  * @brief
  * Performs a right rotation on the target index
  * 
@@ -414,4 +483,108 @@ bool Treap::contains(int val) {
     TreapIndex foundIndex = bstFind(val);
 
     return foundIndex != NullNode;
+}
+
+/**
+ * Merges two treaps into a new treap
+ * 
+ * @param left
+ * The left treap to merge. All values must be smaller than those in the right treap.
+ * 
+ * @param right
+ * The right treap to merge. All values must be greater than or equal to those in the left treap.
+ * 
+ * @return Treap*
+ * The merged treap
+ */
+Treap *Treap::merge(Treap *left, Treap *right) {
+    // Validate merge
+    int newSize = left->size + right->size;
+    if (newSize > TREAP_NODES) {
+        throw invalid_argument("Merging these treaps would overflow the new treap. (Sizes: " + to_string(left->size) + ", " + to_string(right->size) + ")");
+    }
+
+    Treap *mergedTreap = new Treap();
+
+    // Copy the two treaps into the new treap
+    TreapIndex leftRootIndex = mergedTreap->transferNodesFrom(left, left->root);
+    TreapIndex rightRootIndex = mergedTreap->transferNodesFrom(right, right->root);
+
+    // Calculate the average of the two roots
+    int leftRootVal = mergedTreap->nodes[leftRootIndex].val;
+    int rightRootVal = mergedTreap->nodes[rightRootIndex].val;
+    int avgVal = (int)((leftRootVal / 2.0) + (rightRootVal / 2.0));
+
+    // Add a dummy node to join the two treaps
+    mergedTreap->nodes[ControlNode] = TreapNode {
+        .val = avgVal,
+        .weight = NegInfinity,
+        .parent = NullNode,
+        .left = leftRootIndex,
+        .right = rightRootIndex
+    };
+    mergedTreap->nodes[leftRootIndex].parent = ControlNode;
+    mergedTreap->nodes[rightRootIndex].parent = ControlNode;
+    mergedTreap->root = ControlNode;
+
+    // Move the dummy node down to become a leaf node
+    mergedTreap->moveDown(ControlNode);
+
+    // Cut off the dummy node
+    TreapIndex controlParentIndex = mergedTreap->nodes[ControlNode].parent;
+    if (mergedTreap->nodes[controlParentIndex].left == ControlNode) {
+        mergedTreap->nodes[controlParentIndex].left = NullNode;
+    }
+    else {
+        mergedTreap->nodes[controlParentIndex].right = NullNode;
+    }
+
+    // Return the new merged treap
+    return mergedTreap;
+}
+
+/**
+ * Splits a Treap into two treaps of (on average) equal size
+ * 
+ * @param left
+ * The location to store the left split treap
+ * 
+ * @param right
+ * The location to store the right split treap
+ */
+void Treap::split(Treap **left, Treap **right) {
+    *left = new Treap();
+    *right = new Treap();
+
+    if (size == 0) {
+        // There is nothing to split. Return two empty treaps.
+        return;
+    }
+
+    // Copy the current treap so it can be modified (the current treap should not be changed)
+    Treap workingTreap(*this);
+
+    // Add a dummy node to split the treap
+    workingTreap.nodes[ControlNode] = TreapNode {
+        .val = workingTreap.nodes[root].val,
+        .weight = NegInfinity,
+        .parent = NullNode,
+        .left = NullNode,
+        .right = NullNode
+    };
+
+    // "Insert" the new node into the treap
+    workingTreap.bstInsert(ControlNode);
+
+    // Move the new node up so it becomes the root (NegInfinity weight insures this)
+    workingTreap.moveUp(ControlNode);
+
+    // Copy the left and right subtree into the split treaps and update the root
+    if (workingTreap.nodes[ControlNode].left != NullNode) {
+        (*left)->root = (*left)->transferNodesFrom(&workingTreap, workingTreap.nodes[ControlNode].left);
+    }
+
+    if (workingTreap.nodes[ControlNode].right != NullNode) {
+        (*right)->root = (*right)->transferNodesFrom(&workingTreap, workingTreap.nodes[ControlNode].right);
+    }
 }
