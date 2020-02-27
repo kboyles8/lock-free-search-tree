@@ -19,8 +19,8 @@ const int NegInfinity = numeric_limits<int>::min();
 const int PosInfinity = numeric_limits<int>::max();
 
 // Random generator
-thread_local mt19937 randEngine {(unsigned int)time(NULL)};
-uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
+extern thread_local mt19937 randEngine;
+extern uniform_int_distribution<int> weightDist;
 
 class Treap {
 private:
