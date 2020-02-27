@@ -8,6 +8,9 @@
 
 #include "treap.h"
 
+thread_local mt19937 randEngine {(unsigned int)time(NULL)};
+uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
+
 Treap::Treap() {};
 
 /**
@@ -483,6 +486,16 @@ bool Treap::contains(int val) {
     TreapIndex foundIndex = bstFind(val);
 
     return foundIndex != NullNode;
+}
+
+/**
+ * Returns the size of the treap
+ * 
+ * @return int
+ * The size of the treap
+ */
+int Treap::getSize() {
+    return size;
 }
 
 /**
