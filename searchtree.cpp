@@ -10,7 +10,6 @@ private:
     public:
         bool isRoute {true};
 		T val;
-		int weight; 
 		Treap* treap {NULL};
 		
         Node *left {NULL};
@@ -44,6 +43,27 @@ public:
 			if (temp.isRoute == false)
 			{
 				temp->treap.immutableInsert(val);
+				
+				if (temp->treap.getSize() >= 64)
+				{
+					Node *left = new Node(val);
+					left->val = NULL;
+					left->isRoute = false;
+					
+					Node *right = new Node(val);
+					right->val = NULL;
+					right->isRoute = false;
+					
+					int headval = temp->treap.nodes[temp->treap.root].val;
+					
+					temp->treap.split(left->treap, right->treap);
+					
+					temp->val = headval;
+					temp->isRoute = true;
+					temp->left = left;
+					temp->right = right;
+					// Leave this node's treap in the struct. 
+				}
 				return;
 			}
 			
@@ -89,11 +109,32 @@ public:
         }
 
         Node *temp = head;
+		Node *temp2;
 
         while (true) {
 			if (temp.isRoute == false)
 			{
 				temp->treap.immutableRemove(val);
+				
+				if (temp->treap.getSize() <= 16)
+				{										
+					if (temp2->left == temp)
+					{
+						if (temp2->right != NULL && temp2->right->treap.getSize() <= 16)
+						{
+							temp->treap = temp->treap.merge(temp, temp2->right);
+						}
+					}
+						
+					else
+					{
+						if (temp2->left != NULL && temp2->left->treap.getSize() <= 16)
+						{
+							temp->treap = temp->treap.merge(temp2->left, temp);
+						}
+							
+					}
+				}
 				return;
 			}
 			
@@ -103,6 +144,7 @@ public:
                     return;
                 }
                 else {
+					temp2 = temp;
                     temp = temp->left;
                 }
             }
@@ -111,6 +153,7 @@ public:
                     return;
                 }
                 else {
+					temp2 = temp;
                     temp = temp->right;
                 }
             }
