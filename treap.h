@@ -70,6 +70,8 @@ public:
 
     bool contains(int val);
 
+    int getSize();
+
     static Treap *merge(Treap *left, Treap *right);
     void split(Treap **left, Treap **right);
 };

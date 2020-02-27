@@ -486,6 +486,16 @@ bool Treap::contains(int val) {
 }
 
 /**
+ * Returns the size of the treap
+ * 
+ * @return int
+ * The size of the treap
+ */
+int Treap::getSize() {
+    return size;
+}
+
+/**
  * Merges two treaps into a new treap
  * 
  * @param left
