@@ -601,3 +601,29 @@ void Treap::split(Treap **left, Treap **right) {
         (*right)->root = (*right)->transferNodesFrom(&workingTreap, workingTreap.nodes[ControlNode].right);
     }
 }
+
+/**
+ * Inserts an element into the Treap sequentially.
+ * 
+ * @param val
+ * The value to insert
+ */
+void Treap::sequentialInsert(int val) {
+    insert(val);
+}
+
+/**
+ * Removes an element from the Treap sequentially.
+ * 
+ * @param val
+ * The value to remove
+ * 
+ * @return true
+ * If the value was removed
+ * 
+ * @return false
+ * If the value was not in the Treap
+ */
+bool Treap::sequentialRemove(int val) {
+    return remove(val);
+}

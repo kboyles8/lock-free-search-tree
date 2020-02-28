@@ -74,6 +74,9 @@ public:
 
     static Treap *merge(Treap *left, Treap *right);
     void split(Treap **left, Treap **right);
+
+    void sequentialInsert(int val);
+    bool sequentialRemove(int val);
 };
 
 #endif /* TREAP_H */
