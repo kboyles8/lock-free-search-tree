@@ -489,6 +489,56 @@ bool Treap::contains(int val) {
 }
 
 /**
+ * Returns all values between a given min and max, inclusive
+ * 
+ * @param min
+ * The minimum value (inclusive)
+ * 
+ * @param max
+ * The maximum value (inclusive)
+ * 
+ * @return vector<int>
+ * The values in the Treap between the minimum and maximum values
+ */
+vector<int> Treap::rangeQuery(int min, int max) {
+    vector<int> values;
+
+    if (root == NullNode) {
+        return values;
+    }
+
+    vector<TreapIndex> nodesToCheck;
+    nodesToCheck.push_back(root);
+
+    while (!nodesToCheck.empty()) {
+        TreapIndex currentIndex = nodesToCheck.back();
+        nodesToCheck.pop_back();
+
+        int currentVal = nodes[currentIndex].val;
+        int currentLeft = nodes[currentIndex].left;
+        int currentRight = nodes[currentIndex].right;
+
+        // Add this value if it is in range
+        if (currentVal >= min && currentVal <= max) {
+            values.push_back(currentVal);
+        }
+
+        // Check values to the left if this value is not smaller than the minimum value
+        if (currentVal >= min && currentLeft != NullNode) {
+            nodesToCheck.push_back(currentLeft);
+        }
+
+        // Check values to the right if this value is not larger than the maximum value
+        if (currentVal <= max && currentRight != NullNode) {
+            nodesToCheck.push_back(currentRight);
+        }
+    }
+
+    return values;
+}
+
+
+/**
  * Returns the size of the treap
  * 
  * @return int

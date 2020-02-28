@@ -70,6 +70,8 @@ public:
 
     bool contains(int val);
 
+    vector<int> rangeQuery(int min, int max);
+
     int getSize();
 
     static Treap *merge(Treap *left, Treap *right);
