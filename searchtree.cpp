@@ -40,10 +40,11 @@ public:
         Node *temp = head;
 
         while (true) {
+			// Travels until it finds the base node where the value should go 
 			if (temp.isRoute == false)
 			{
 				temp->treap.immutableInsert(val);
-				
+				// If inserting causes the treap to become too large, it splits into two.
 				if (temp->treap.getSize() >= 64)
 				{
 					Node *left = new Node(val);
@@ -70,6 +71,7 @@ public:
 			
             if (temp->val > val) {
                 if (temp->left == NULL) {
+					// Inserts a new node at this spot if there is no base node here for it.
 					Node *n = new Node(val);
 					
 					n->treap = new Treap();
@@ -86,6 +88,7 @@ public:
             }
             else {
                 if (temp->right == NULL) {
+					// Inserts a new node at this spot if there is no base node here for it.
 					Node *n = new Node(val);
 					
 					n->treap = new Treap();
@@ -112,10 +115,12 @@ public:
 		Node *temp2;
 
         while (true) {
+			// Travels until it finds the base node with the value and performs remove on the treap inside.
 			if (temp.isRoute == false)
 			{
 				temp->treap.immutableRemove(val);
 				
+				// If that would cause the treap to become too small it performs a merge with temp's sibling.
 				if (temp->treap.getSize() <= 16)
 				{										
 					if (temp2->left == temp)
@@ -168,6 +173,7 @@ public:
         Node *temp = head;
 
         while (true) {
+			// Travels down until it finds the correct base node, performs contains on the treap once it does.
 			if (temp.isRoute == false)
 			{
 				return temp->treap.contains(val);
@@ -192,6 +198,53 @@ public:
             }
         }
 	}
+	
+	vector<T> rangeQuery(T low, T high) {
+		vector<T> result;
+		if (head == NULL) {
+            return result;
+        }		
+
+		vector<Node> nodesToCheck;
+		nodesToCheck.push_back(head);
+		vector<T> values;
+
+		while (!nodesToCheck.empty()) {
+			Node *temp = nodesToCheck.back();
+			nodesToCheck.pop_back();
+			
+			// If popped node is base node, perform range query on treap and add it to result.
+			if (temp.isRoute == false) {
+				values = temp->treap.rangeQuery(low, high);
+				result.insert(result.end(), values.begin(), values.end());
+				continue;
+			}
+
+			Node* currentLeft = temp->left;
+			Node* currentRight = temp->right;
+
+			// Adds left child if within range 
+			if (currentLeft != NULL && temp.val >= low) {
+				nodesToCheck.push_back(currentLeft);
+			}
+			// Adds right child if within range 
+			if (currentRight != NULL && temp.val <= high) {
+				nodesToCheck.push_back(currentRight);
+			}
+			// Catches minimum boundary case
+			if (currentLeft != NULL && currentRight != NULL && currentLeft.val <= low && currentRight.val >= low) {
+				nodesToCheck.push_back(currentLeft->right);
+			}
+			// Catches maximum boundary case
+			if (currentLeft != NULL && currentRight != NULL && currentLeft.val <= high && currentRight.val >= high) {
+				nodesToCheck.push_back(currentRight->left);
+			}
+			
+		}
+		return result;
+		
+	}
+
 };
 
 int main () {
