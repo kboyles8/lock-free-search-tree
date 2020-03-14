@@ -4,6 +4,8 @@ project(lock-free-search-tree VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
+set(CMAKE_CXX_FLAGS "-Wno-deprecated-declarations")
+
 # Add main source files here
 set(
     SOURCE
