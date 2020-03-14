@@ -1,6 +1,5 @@
 #include <iostream>
 #include "treap.h"
-#include "treap.cpp"
 
 using namespace std;
 
