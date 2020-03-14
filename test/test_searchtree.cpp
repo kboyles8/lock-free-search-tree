@@ -71,23 +71,23 @@ TEST_F(SearchTreeTest, RangeQuery) {
 
 }
 
-TEST_F(SearchTreeTest, Split) {
-	for (int i = 0; i < 64; i++)
+TEST_F(SearchTreeTest, SplitAndMergeBulkTest) {
+	for (int i = 0; i < 1024; i++)
 	{
 		searchtree.insert(i);
 	}
 	
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < 1024; i++)
 	{
 	    EXPECT_EQ(true, searchtree.lookup(i));
 	}
 
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < 1024; i++)
 	{
 		searchtree.remove(i);
 	}
 	
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < 1024; i++)
 	{
 	    EXPECT_EQ(false, searchtree.lookup(i));
 	}

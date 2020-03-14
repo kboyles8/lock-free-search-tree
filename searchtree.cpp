@@ -59,7 +59,7 @@ public:
 					int headval = temp->treap->getRoot();
 
 					temp->treap->split(&left->treap, &right->treap);
-
+					
 					temp->val = headval;
 					temp->isRoute = true;
 					temp->left = left;
@@ -124,13 +124,13 @@ public:
 			if (temp->isRoute == false)
 			{
 				temp->treap = temp->treap->immutableRemove(val);
-
+				
 				// If that would cause the treap to become too small it performs a merge with temp's sibling.
 				if (temp->treap->getSize() <= 16)
 				{
 					if (temp2->left == temp)
 					{
-						if (temp2->right != NULL && temp2->right->treap->getSize() <= 16)
+						if (temp2->right != NULL && temp2->right->treap != NULL && temp2->right->treap->getSize() <= 16)
 						{
 							temp->treap = temp->treap->merge(temp->treap, temp2->right->treap);
 							Node *deletethis = temp2->right;
@@ -142,7 +142,7 @@ public:
 
 					else if (temp2->right == temp)
 					{
-						if (temp2->left != NULL && temp2->left->treap->getSize() <= 16)
+						if (temp2->left != NULL && temp2->left->treap != NULL && temp2->left->treap->getSize() <= 16)
 						{
 							temp->treap = temp->treap->merge(temp2->left->treap, temp->treap);
 							Node *deletethis = temp2->left;
