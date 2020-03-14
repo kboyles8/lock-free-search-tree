@@ -4,6 +4,11 @@
 
 class TreapTest : public ::testing::Test {
 protected:
+    Treap treap;
+    Treap *left {nullptr};
+    Treap *right {nullptr};
+    Treap *merged {nullptr};
+
     // void SetUp() override { }
     void TearDown() override {
         // Free trees if allocated
@@ -19,10 +24,6 @@ protected:
     }
     }
 
-    Treap treap;
-    Treap *left {nullptr};
-    Treap *right {nullptr};
-    Treap *merged {nullptr};
 };
 
 TEST_F(TreapTest, InsertAndRemove) {
