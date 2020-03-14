@@ -370,6 +370,11 @@ TreapIndex Treap::bstFind(int val) {
  * The value to insert
  */
 void Treap::insert(int val) {
+    // If the treap is full, new nodes can't be added
+    if (size == TREAP_NODES) {
+        throw out_of_range("Treap is full");
+    }
+
     // Retrieve the node for this insertion
     TreapIndex newNodeIndex = createNewNode(val);
 
