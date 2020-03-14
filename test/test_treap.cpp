@@ -6,18 +6,23 @@ class TreapTest : public ::testing::Test {
 protected:
     // void SetUp() override { }
     void TearDown() override {
-        // Free the left and right tree if needed
+        // Free trees if allocated
         if (left != nullptr) {
             delete(left);
         }
         if (right != nullptr) {
             delete(right);
         }
+        if (merged != nullptr) {
+            delete(merged);
+        }
+    }
     }
 
     Treap treap;
     Treap *left {nullptr};
     Treap *right {nullptr};
+    Treap *merged {nullptr};
 };
 
 TEST_F(TreapTest, InsertAndRemove) {
@@ -166,4 +171,47 @@ TEST_F(TreapTest, SplitEmpty) {
 
     ASSERT_EQ(left->getSize(), 0);
     ASSERT_EQ(right->getSize(), 0);
+}
+
+TEST_F(TreapTest, MergeFull) {
+    left = new Treap();
+    right = new Treap();
+
+    ASSERT_EQ(0, left->getSize());
+    ASSERT_EQ(0, right->getSize());
+
+    int halfSize = TREAP_NODES / 2;
+
+    // Insert half of the nodes into the left, and half into the right
+    for (int i = 1; i <= halfSize; i++) {
+        left->sequentialInsert(i);
+        ASSERT_EQ(i, left->getSize());
+        ASSERT_TRUE(left->contains(i));
+    }
+    for (int i = halfSize + 1; i <= TREAP_NODES; i++) {
+        right->sequentialInsert(i);
+        ASSERT_EQ(i - halfSize, right->getSize());
+        ASSERT_TRUE(right->contains(i));
+    }
+
+    // Merge the two halves
+    merged = Treap::merge(left, right);
+
+    // Ensure all values make it to the merged Treap
+    for (int i = 1; i <= TREAP_NODES; i++) {
+        ASSERT_TRUE(merged->contains(i));
+    }
+    ASSERT_EQ(TREAP_NODES, merged->getSize());
+}
+
+TEST_F(TreapTest, MergeEmpty) {
+    left = new Treap();
+    right = new Treap();
+
+    ASSERT_EQ(0, left->getSize());
+    ASSERT_EQ(0, right->getSize());
+
+    merged = Treap::merge(left, right);
+
+    ASSERT_EQ(0, merged->getSize());
 }
