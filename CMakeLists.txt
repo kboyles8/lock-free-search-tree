@@ -4,7 +4,7 @@ project(lock-free-search-tree VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
-set(CMAKE_CXX_FLAGS "-Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-declarations")
 
 # Add main source files here
 set(
@@ -31,16 +31,16 @@ include(CPack)
 # Download and unpack googletest at configure time
 configure_file(CMakeLists-gtest.in googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
 if(result)
-  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
 if(result)
-  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
 endif()
 
 # Prevent overriding the parent project's compiler/linker
@@ -57,7 +57,7 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 # dependencies automatically when using CMake 2.8.11 or
 # later. Otherwise we have to add them here ourselves.
 if (CMAKE_VERSION VERSION_LESS 2.8.11)
-  include_directories("${gtest_SOURCE_DIR}/include")
+    include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
 # Link test library
