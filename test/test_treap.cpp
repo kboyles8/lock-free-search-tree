@@ -215,3 +215,37 @@ TEST_F(TreapTest, MergeEmpty) {
 
     ASSERT_EQ(0, merged->getSize());
 }
+
+TEST_F(TreapTest, MergeLeftEmpty) {
+    left = new Treap();
+    right = new Treap();
+
+    ASSERT_EQ(0, left->getSize());
+    ASSERT_EQ(0, right->getSize());
+
+    right->sequentialInsert(1);
+
+    ASSERT_EQ(1, right->getSize());
+
+    merged = Treap::merge(left, right);
+
+    ASSERT_EQ(1, merged->getSize());
+    ASSERT_TRUE(merged->contains(1));
+}
+
+TEST_F(TreapTest, MergeRightEmpty) {
+    left = new Treap();
+    right = new Treap();
+
+    ASSERT_EQ(0, left->getSize());
+    ASSERT_EQ(0, right->getSize());
+
+    left->sequentialInsert(1);
+
+    ASSERT_EQ(1, left->getSize());
+
+    merged = Treap::merge(left, right);
+
+    ASSERT_EQ(1, merged->getSize());
+    ASSERT_TRUE(merged->contains(1));
+}
