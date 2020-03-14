@@ -30,7 +30,7 @@ public:
             Node *n = new Node(val);
 
 			n->treap = new Treap();
-			n->treap->immutableInsert(val);
+			n->treap = n->treap->immutableInsert(val);
 			n->val = EMPTY;
 			n->isRoute = false;
 
@@ -44,7 +44,7 @@ public:
 			// Travels until it finds the base node where the value should go
 			if (temp->isRoute == false)
 			{
-				temp->treap->immutableInsert(val);
+				temp->treap = temp->treap->immutableInsert(val);
 				// If inserting causes the treap to become too large, it splits into two.
 				if (temp->treap->getSize() >= 64)
 				{
@@ -76,7 +76,7 @@ public:
 					Node *n = new Node(val);
 
 					n->treap = new Treap();
-					n->treap->immutableInsert(val);
+					n->treap = n->treap->immutableInsert(val);
 					n->val = EMPTY;
 					n->isRoute = false;
 
@@ -93,7 +93,7 @@ public:
 					Node *n = new Node(val);
 
 					n->treap = new Treap();
-					n->treap->immutableInsert(val);
+					n->treap = n->treap->immutableInsert(val);
 					n->val = EMPTY;
 					n->isRoute = false;
 
@@ -119,7 +119,7 @@ public:
 			// Travels until it finds the base node with the value and performs remove on the treap inside.
 			if (temp->isRoute == false)
 			{
-				temp->treap->immutableRemove(val);
+				temp->treap = temp->treap->immutableRemove(val);
 
 				// If that would cause the treap to become too small it performs a merge with temp's sibling.
 				if (temp->treap->getSize() <= 16)
