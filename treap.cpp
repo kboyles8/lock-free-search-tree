@@ -574,6 +574,11 @@ Treap *Treap::merge(Treap *left, Treap *right) {
 
     Treap *mergedTreap = new Treap();
 
+    // If there are no elements in the Treaps, just return an empty Treap
+    if (newSize == 0) {
+        return mergedTreap;
+    }
+
     // Copy the two treaps into the new treap
     TreapIndex leftRootIndex = mergedTreap->transferNodesFrom(left, left->root);
     TreapIndex rightRootIndex = mergedTreap->transferNodesFrom(right, right->root);
