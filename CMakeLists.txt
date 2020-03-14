@@ -17,6 +17,7 @@ set(
 set(
     TEST_SOURCE
     ${PROJECT_SOURCE_DIR}/test/test_treap.cpp
+    ${PROJECT_SOURCE_DIR}/test/test_searchtree.cpp
 )
 
 set(MAIN ${PROJECT_SOURCE_DIR}/main.cpp)
