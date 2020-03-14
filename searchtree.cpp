@@ -24,13 +24,6 @@ private:
     Node *head {NULL};
 
 public:
-
-    SearchTree(T val)
-    {
-       Node *head = NULL;
-    }
-
-
     void insert(T val) {
         if (head == NULL) {
             Node *n = new Node(val);
@@ -253,8 +246,3 @@ public:
 	}
 
 };
-
-/*int main () {
-
-	return 0;
-}*/
