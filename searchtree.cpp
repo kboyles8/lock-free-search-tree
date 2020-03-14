@@ -129,6 +129,10 @@ public:
 						if (temp2->right != NULL && temp2->right->treap->getSize() <= 16)
 						{
 							temp->treap = temp->treap->merge(temp->treap, temp2->right->treap);
+							Node *deletethis = temp2->right;
+							temp2->right = NULL;
+							delete(deletethis->treap);
+							delete(deletethis);
 						}
 					}
 
@@ -137,6 +141,10 @@ public:
 						if (temp2->left != NULL && temp2->left->treap->getSize() <= 16)
 						{
 							temp->treap = temp->treap->merge(temp2->left->treap, temp->treap);
+							Node *deletethis = temp2->left;
+							temp2->left = NULL;
+							delete(deletethis->treap);
+							delete(deletethis);
 						}
 
 					}
