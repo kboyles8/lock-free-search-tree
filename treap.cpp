@@ -107,6 +107,10 @@ TreapIndex Treap::createNewNode(int val) {
  * The index of the root of the transferred nodes, in the current treap
  */
 TreapIndex Treap::transferNodesFrom(Treap *other, TreapIndex rootIndex) {
+    if (rootIndex == NullNode) {
+        throw invalid_argument("Root node index to transfer from is Null");
+    }
+
     TreapIndex transferRoot;
     vector<TreapTransferInfo> nodesToTransfer;
 
@@ -577,6 +581,20 @@ Treap *Treap::merge(Treap *left, Treap *right) {
 
     // If there are no elements in the Treaps, just return an empty Treap
     if (newSize == 0) {
+        return mergedTreap;
+    }
+
+    // If one Treap is empty, copy the non-empty one and return
+    if (right->root == NullNode) {
+        TreapIndex newRoot = mergedTreap->transferNodesFrom(left, left->root);
+        mergedTreap->root = newRoot;
+        mergedTreap->nodes[newRoot].parent = NullNode;
+        return mergedTreap;
+    }
+    if (left->root == NullNode) {
+        TreapIndex newRoot = mergedTreap->transferNodesFrom(right, right->root);
+        mergedTreap->root = newRoot;
+        mergedTreap->nodes[newRoot].parent = NullNode;
         return mergedTreap;
     }
 
