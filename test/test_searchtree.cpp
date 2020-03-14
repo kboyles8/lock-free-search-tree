@@ -53,9 +53,13 @@ TEST_F(SearchTreeTest, RangeQuery) {
 	vector<int> test2 = searchtree.rangeQuery(3, 100);
 	sort(test2.begin(), test2.end());
 	
-	test = {2, 3, 4};
+	EXPECT_EQ(test, test2);
+	
+	test = {1, 2, 3, 4};
 	test2 = searchtree.rangeQuery(-100, 4);
 	sort(test2.begin(), test2.end());
+	
+	EXPECT_EQ(test, test2);
 	
 	test = {4, 5, 6};
 	test2 = searchtree.rangeQuery(4, 6);
@@ -64,3 +68,4 @@ TEST_F(SearchTreeTest, RangeQuery) {
     EXPECT_EQ(test, test2);
 
 }
+
