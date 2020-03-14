@@ -22,8 +22,6 @@ protected:
             delete(merged);
         }
     }
-    }
-
 };
 
 TEST_F(TreapTest, InsertAndRemove) {
