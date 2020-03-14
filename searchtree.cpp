@@ -1,6 +1,6 @@
 #include <iostream>
 #include "treap.h"
-
+#define EMPTY -2147483647
 using namespace std;
 
 template <class T>
@@ -9,7 +9,8 @@ private:
     class Node {
     public:
         bool isRoute {true};
-	       T val;
+	    T val;
+		int weight;
 		Treap* treap {NULL};
 
         Node *left {NULL};
@@ -29,8 +30,8 @@ public:
             Node *n = new Node(val);
 
 			n->treap = new Treap();
-			n->treap.immutableInsert(val);
-			n->val = NULL;
+			n->treap->immutableInsert(val);
+			n->val = EMPTY;
 			n->isRoute = false;
 
             head = n;
@@ -43,21 +44,21 @@ public:
 			// Travels until it finds the base node where the value should go
 			if (temp->isRoute == false)
 			{
-				temp->treap.immutableInsert(val);
+				temp->treap->immutableInsert(val);
 				// If inserting causes the treap to become too large, it splits into two.
-				if (temp->treap.getSize() >= 64)
+				if (temp->treap->getSize() >= 64)
 				{
 					Node *left = new Node(val);
-					left->val = NULL;
+					left->val = EMPTY;
 					left->isRoute = false;
 
 					Node *right = new Node(val);
-					right->val = NULL;
+					right->val = EMPTY;
 					right->isRoute = false;
 
-					int headval = temp->treap.nodes[temp->treap.root].val;
+					int headval = temp->val;
 
-					temp->treap.split(left->treap, right->treap);
+					temp->treap->split(&left->treap, &right->treap);
 
 					temp->val = headval;
 					temp->isRoute = true;
@@ -75,8 +76,8 @@ public:
 					Node *n = new Node(val);
 
 					n->treap = new Treap();
-					n->treap.immutableInsert(val);
-					n->val = NULL;
+					n->treap->immutableInsert(val);
+					n->val = EMPTY;
 					n->isRoute = false;
 
                     temp->left = n;
@@ -92,8 +93,8 @@ public:
 					Node *n = new Node(val);
 
 					n->treap = new Treap();
-					n->treap.immutableInsert(val);
-					n->val = NULL;
+					n->treap->immutableInsert(val);
+					n->val = EMPTY;
 					n->isRoute = false;
 
                     temp->right = n;
@@ -118,24 +119,24 @@ public:
 			// Travels until it finds the base node with the value and performs remove on the treap inside.
 			if (temp->isRoute == false)
 			{
-				temp->treap.immutableRemove(val);
+				temp->treap->immutableRemove(val);
 
 				// If that would cause the treap to become too small it performs a merge with temp's sibling.
-				if (temp->treap.getSize() <= 16)
+				if (temp->treap->getSize() <= 16)
 				{
 					if (temp2->left == temp)
 					{
-						if (temp2->right != NULL && temp2->right->treap.getSize() <= 16)
+						if (temp2->right != NULL && temp2->right->treap->getSize() <= 16)
 						{
-							temp->treap = temp->treap.merge(temp, temp2->right);
+							temp->treap = temp->treap->merge(temp->treap, temp2->right->treap);
 						}
 					}
 
 					else
 					{
-						if (temp2->left != NULL && temp2->left->treap.getSize() <= 16)
+						if (temp2->left != NULL && temp2->left->treap->getSize() <= 16)
 						{
-							temp->treap = temp->treap.merge(temp2->left, temp);
+							temp->treap = temp->treap->merge(temp2->left->treap, temp->treap);
 						}
 
 					}
@@ -176,7 +177,7 @@ public:
 			// Travels down until it finds the correct base node, performs contains on the treap once it does.
 			if (temp->isRoute == false)
 			{
-				return temp->treap.contains(val);
+				return temp->treap->contains(val);
 			}
 
 
@@ -204,18 +205,19 @@ public:
 		if (head == NULL) {
             return result;
         }
-
-		vector<Node> nodesToCheck;
-		nodesToCheck.push_back(head);
+		Node* temp = head;
+		vector<Node*> nodesToCheck;
+		nodesToCheck.push_back(temp);
 		vector<T> values;
+		
 
 		while (!nodesToCheck.empty()) {
-			Node *temp = nodesToCheck.back();
+			temp = nodesToCheck.back();
 			nodesToCheck.pop_back();
 
 			// If popped node is base node, perform range query on treap and add it to result.
 			if (temp->isRoute == false) {
-				values = temp->treap.rangeQuery(low, high);
+				values = temp->treap->rangeQuery(low, high);
 				result.insert(result.end(), values.begin(), values.end());
 				continue;
 			}
@@ -241,6 +243,7 @@ public:
 			}
 
 		}
+		
 		return result;
 
 	}
