@@ -435,6 +435,7 @@ bool Treap::remove(int val) {
     moveNode(size - 1, foundIndex);
 
     size--;
+    return true;
 }
 
 /**
