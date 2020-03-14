@@ -79,6 +79,8 @@ public:
 
     void sequentialInsert(int val);
     bool sequentialRemove(int val);
+	
+	int getRoot();
 };
 
 #endif /* TREAP_H */

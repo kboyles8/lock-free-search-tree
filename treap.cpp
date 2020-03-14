@@ -706,3 +706,13 @@ void Treap::sequentialInsert(int val) {
 bool Treap::sequentialRemove(int val) {
     return remove(val);
 }
+
+/**
+ * Returns the value of the root of the Treap
+ * 
+ * @return int
+ * The value of the root of the treap
+ */
+int Treap::getRoot() {
+    return nodes[root].val;
+}

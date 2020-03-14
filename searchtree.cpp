@@ -56,7 +56,7 @@ public:
 					right->val = EMPTY;
 					right->isRoute = false;
 
-					int headval = temp->val;
+					int headval = temp->treap->getRoot();
 
 					temp->treap->split(&left->treap, &right->treap);
 
@@ -64,13 +64,17 @@ public:
 					temp->isRoute = true;
 					temp->left = left;
 					temp->right = right;
+					Treap *deletethistreap = temp->treap;
+					temp->treap = NULL;
+					delete(deletethistreap);
+					
 					// Leave this node's treap in the struct.
 				}
 				return;
 			}
 
 
-            if (temp->val > val) {
+            if (temp->val >= val) {
                 if (temp->left == NULL) {
 					// Inserts a new node at this spot if there is no base node here for it.
 					Node *n = new Node(val);
@@ -136,7 +140,7 @@ public:
 						}
 					}
 
-					else
+					else if (temp2->right == temp)
 					{
 						if (temp2->left != NULL && temp2->left->treap->getSize() <= 16)
 						{
@@ -153,7 +157,7 @@ public:
 			}
 
 
-            if (temp->val > val) {
+            if (temp->val >= val) {
                 if (temp->left == NULL) {
                     return;
                 }
@@ -189,7 +193,7 @@ public:
 			}
 
 
-            if (temp->val > val) {
+            if (temp->val >= val) {
                 if (temp->left == NULL) {
                     return false;
                 }
