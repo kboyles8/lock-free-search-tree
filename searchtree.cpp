@@ -8,7 +8,6 @@ private:
     class Node {
     public:
         bool isRoute {true};
-        int weight;
         int val;
         Treap* treap {NULL};
 
@@ -17,7 +16,6 @@ private:
 
         Node(int val) {
             this->val = val;
-            this->weight = weightDist(randEngine);
         }
     };
 
