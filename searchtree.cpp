@@ -1,9 +1,10 @@
 #include <iostream>
+#include <limits>
 
 #include "treap.h"
 #include "searchtree.h"
 
-#define EMPTY -2147483647
+const int Empty = numeric_limits<int>::min();
 
 using namespace std;
 
@@ -13,7 +14,7 @@ void SearchTree::insert(int val) {
 
         n->treap = new Treap();
         n->treap = n->treap->immutableInsert(val);
-        n->val = EMPTY;
+        n->val = Empty;
         n->isRoute = false;
 
         head = n;
@@ -31,11 +32,11 @@ void SearchTree::insert(int val) {
             if (temp->treap->getSize() >= 64)
             {
                 Node *left = new Node(val);
-                left->val = EMPTY;
+                left->val = Empty;
                 left->isRoute = false;
 
                 Node *right = new Node(val);
-                right->val = EMPTY;
+                right->val = Empty;
                 right->isRoute = false;
 
                 int headval = temp->treap->getRoot();
@@ -62,7 +63,7 @@ void SearchTree::insert(int val) {
 
                 n->treap = new Treap();
                 n->treap = n->treap->immutableInsert(val);
-                n->val = EMPTY;
+                n->val = Empty;
                 n->isRoute = false;
 
                 temp->left = n;
@@ -79,7 +80,7 @@ void SearchTree::insert(int val) {
 
                 n->treap = new Treap();
                 n->treap = n->treap->immutableInsert(val);
-                n->val = EMPTY;
+                n->val = Empty;
                 n->isRoute = false;
 
                 temp->right = n;
