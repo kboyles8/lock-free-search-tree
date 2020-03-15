@@ -12,11 +12,10 @@ using namespace std;
 
 void SearchTree::insert(int val) {
     if (head == NULL) {
-        Node *n = new Node(val);
+        Node *n = new Node(Empty);
 
         n->treap = new Treap();
         n->treap = n->treap->immutableInsert(val);
-        n->val = Empty;
         n->isRoute = false;
 
         head = n;
@@ -27,33 +26,28 @@ void SearchTree::insert(int val) {
 
     while (true) {
         // Travels until it finds the base node where the value should go
-        if (temp->isRoute == false)
-        {
+        if (!temp->isRoute) {
             temp->treap = temp->treap->immutableInsert(val);
+
             // If inserting causes the treap to become too large, it splits into two.
             if (temp->treap->getSize() >= TreapSplitSize) {
-            {
-                Node *left = new Node(val);
-                left->val = Empty;
+                Node *left = new Node(Empty);
                 left->isRoute = false;
 
-                Node *right = new Node(val);
-                right->val = Empty;
+                Node *right = new Node(Empty);
                 right->isRoute = false;
 
-                int headval = temp->treap->getRoot();
+                int headVal = temp->treap->getRoot();
 
                 temp->treap->split(&left->treap, &right->treap);
-                
-                temp->val = headval;
+
+                temp->val = headVal;
                 temp->isRoute = true;
                 temp->left = left;
                 temp->right = right;
-                Treap *deletethistreap = temp->treap;
+
+                delete(temp->treap);
                 temp->treap = NULL;
-                delete(deletethistreap);
-                
-                // Leave this node's treap in the struct.
             }
             return;
         }
