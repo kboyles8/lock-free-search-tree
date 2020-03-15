@@ -6,7 +6,7 @@
 
 const int Empty = numeric_limits<int>::min();
 const int TreapSplitThreshold = 64;
-const int TreapMergeThreshold = 16;
+const int TreapMergeThreshold = 32;
 
 using namespace std;
 
@@ -66,7 +66,7 @@ void SearchTree::remove(int val) {
     }
 
     Node *temp = head;
-    Node *tempParent;
+    Node *tempParent = nullptr;
 
     // Search until a base node is found
     while (temp->isRoute) {
@@ -83,26 +83,23 @@ void SearchTree::remove(int val) {
     // Perform the remove
     temp->treap = temp->treap->immutableRemove(val);
 
-    // If the remove would cause the treap to become too small, attempt to perform a merge with the node's sibling
-    if (temp->treap->getSize() <= TreapMergeThreshold) {
-        if (tempParent->left == temp) {
-            if (tempParent->right != NULL && tempParent->right->treap != NULL && tempParent->right->treap->getSize() <= TreapMergeThreshold) {
-                temp->treap = temp->treap->merge(temp->treap, tempParent->right->treap);
-                Node *deletethis = tempParent->right;
-                tempParent->right = NULL;
-                delete(deletethis->treap);
-                delete(deletethis);
-            }
-        }
+    // Check if a merge is possible. This is when the node has a parent, and the node's sibling is also a base node
+    bool mergeIsPossible = tempParent != nullptr && !tempParent->left->isRoute && !tempParent->right->isRoute;
 
-        else if (tempParent->right == temp) {
-            if (tempParent->left != NULL && tempParent->left->treap != NULL && tempParent->left->treap->getSize() <= TreapMergeThreshold) {
-                temp->treap = temp->treap->merge(tempParent->left->treap, temp->treap);
-                Node *deletethis = tempParent->left;
-                tempParent->left = NULL;
-                delete(deletethis->treap);
-                delete(deletethis);
-            }
+    if (mergeIsPossible) {
+        // Check if the two nodes are small enough to be merged
+        int combinedSize = tempParent->left->treap->getSize() + tempParent->right->treap->getSize();
+        if (combinedSize <= TreapMergeThreshold) {
+            tempParent->treap = Treap::merge(tempParent->left->treap, tempParent->right->treap);
+            tempParent->isRoute = false;
+
+            delete(tempParent->left->treap);
+            delete(tempParent->left);
+            tempParent->left = nullptr;
+
+            delete(tempParent->right->treap);
+            delete(tempParent->right);
+            tempParent->right = nullptr;
         }
     }
 }
