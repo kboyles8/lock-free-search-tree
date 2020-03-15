@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../treap.h"
-#include "../searchtree.cpp"
+#include "../searchtree.h"
 
 
 class SearchTreeTest : public ::testing::Test {
