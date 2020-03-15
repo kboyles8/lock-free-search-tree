@@ -129,42 +129,33 @@ vector<int> SearchTree::rangeQuery(int low, int high) {
     if (head == NULL) {
         return result;
     }
-    Node* temp = head;
+
+    Node* temp;
+
     vector<Node*> nodesToCheck;
-    nodesToCheck.push_back(temp);
-    vector<int> values;
+    nodesToCheck.push_back(head);
 
     while (!nodesToCheck.empty()) {
         temp = nodesToCheck.back();
         nodesToCheck.pop_back();
 
         // If popped node is base node, perform range query on treap and add it to result.
-        if (temp->isRoute == false) {
-            values = temp->treap->rangeQuery(low, high);
+        if (!temp->isRoute) {
+            vector<int> values = temp->treap->rangeQuery(low, high);
             result.insert(result.end(), values.begin(), values.end());
             continue;
         }
 
-        Node* currentLeft = temp->left;
-        Node* currentRight = temp->right;
+        // Check values to the left if this value is not smaller than the minimum value
+        if (temp->val >= low) {
+            nodesToCheck.push_back(temp->left);
+        }
 
-        // Adds left child if within range
-        if (currentLeft != NULL && temp->val >= low) {
-            nodesToCheck.push_back(currentLeft);
-        }
-        // Adds right child if within range
-        if (currentRight != NULL && temp->val <= high) {
-            nodesToCheck.push_back(currentRight);
-        }
-        // Catches minimum boundary case
-        if (currentLeft != NULL && currentRight != NULL && currentLeft->val <= low && currentRight->val >= low) {
-            nodesToCheck.push_back(currentLeft->right);
-        }
-        // Catches maximum boundary case
-        if (currentLeft != NULL && currentRight != NULL && currentLeft->val <= high && currentRight->val >= high) {
-            nodesToCheck.push_back(currentRight->left);
+        // Check values to the right if this value is not larger than the maximum value
+        if (temp->val <= high) {
+            nodesToCheck.push_back(temp->right);
         }
     }
-    
+
     return result;
 }
