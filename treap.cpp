@@ -608,13 +608,12 @@ Treap *Treap::merge(Treap *left, Treap *right) {
     int avgVal = (int)((leftRootVal / 2.0) + (rightRootVal / 2.0));
 
     // Add a dummy node to join the two treaps
-    mergedTreap->nodes[ControlNode] = TreapNode {
-        .val = avgVal,
-        .weight = NegInfinity,
-        .parent = NullNode,
-        .left = leftRootIndex,
-        .right = rightRootIndex
-    };
+    mergedTreap->nodes[ControlNode].val = avgVal;
+    mergedTreap->nodes[ControlNode].weight = NegInfinity;
+    mergedTreap->nodes[ControlNode].parent = NullNode;
+    mergedTreap->nodes[ControlNode].left = leftRootIndex;
+    mergedTreap->nodes[ControlNode].right = rightRootIndex;
+
     mergedTreap->nodes[leftRootIndex].parent = ControlNode;
     mergedTreap->nodes[rightRootIndex].parent = ControlNode;
     mergedTreap->root = ControlNode;
@@ -657,13 +656,11 @@ void Treap::split(Treap **left, Treap **right) {
     Treap workingTreap(*this);
 
     // Add a dummy node to split the treap
-    workingTreap.nodes[ControlNode] = TreapNode {
-        .val = workingTreap.nodes[root].val,
-        .weight = NegInfinity,
-        .parent = NullNode,
-        .left = NullNode,
-        .right = NullNode
-    };
+    workingTreap.nodes[ControlNode].val = workingTreap.nodes[root].val;
+    workingTreap.nodes[ControlNode].weight = NegInfinity;
+    workingTreap.nodes[ControlNode].parent = NullNode;
+    workingTreap.nodes[ControlNode].left = NullNode;
+    workingTreap.nodes[ControlNode].right = NullNode;
 
     // "Insert" the new node into the treap
     workingTreap.bstInsert(ControlNode);
