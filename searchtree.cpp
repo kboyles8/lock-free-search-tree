@@ -24,41 +24,39 @@ void SearchTree::insert(int val) {
 
     Node *temp = head;
 
-    while (true) {
-        // Travels until it finds the base node where the value should go
-        if (!temp->isRoute) {
-            temp->treap = temp->treap->immutableInsert(val);
 
-            // If inserting causes the treap to become too large, it splits into two.
-            if (temp->treap->getSize() >= TreapSplitSize) {
-                Node *left = new Node(Empty);
-                left->isRoute = false;
-
-                Node *right = new Node(Empty);
-                right->isRoute = false;
-
-                int headVal = temp->treap->getRoot();
-
-                temp->treap->split(&left->treap, &right->treap);
-
-                temp->val = headVal;
-                temp->isRoute = true;
-                temp->left = left;
-                temp->right = right;
-
-                delete(temp->treap);
-                temp->treap = NULL;
-            }
-
-            return;
-        }
-
+    // Search until a base node is found
+    while (temp->isRoute) {
         if (temp->val >= val) {
             temp = temp->left;
         }
         else {
             temp = temp->right;
         }
+    }
+
+    // Insert the value
+    temp->treap = temp->treap->immutableInsert(val);
+
+    // If inserting causes the treap to become too large, split it in two
+    if (temp->treap->getSize() >= TreapSplitSize) {
+        Node *left = new Node(Empty);
+        left->isRoute = false;
+
+        Node *right = new Node(Empty);
+        right->isRoute = false;
+
+        int headVal = temp->treap->getRoot();
+
+        temp->treap->split(&left->treap, &right->treap);
+
+        temp->val = headVal;
+        temp->isRoute = true;
+        temp->left = left;
+        temp->right = right;
+
+        delete(temp->treap);
+        temp->treap = NULL;
     }
 }
 
