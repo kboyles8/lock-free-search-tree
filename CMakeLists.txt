@@ -5,8 +5,15 @@ include(CTest)
 enable_testing()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-declarations")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Include thread library
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
 
+# Add mrlock source files here
 set(MRLOCK_SOURCE_DIR ${PROJECT_SOURCE_DIR}/lib/mrlock/src)
 set(
     MRLOCK_SOURCE
@@ -28,9 +35,11 @@ set(
 
 set(MAIN ${PROJECT_SOURCE_DIR}/main.cpp)
 
-
 add_executable(lfca ${SOURCE} ${MRLOCK_SOURCE} ${MAIN})
 add_executable(TEST ${SOURCE} ${MRLOCK_SOURCE} ${TEST_SOURCE})
+
+target_link_libraries(lfca Threads::Threads)
+target_link_libraries(TEST Threads::Threads)
 
 target_include_directories(lfca PRIVATE ${MRLOCK_SOURCE_DIR})
 target_include_directories(TEST PRIVATE ${MRLOCK_SOURCE_DIR})
