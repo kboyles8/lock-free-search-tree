@@ -49,42 +49,15 @@ void SearchTree::insert(int val) {
                 delete(temp->treap);
                 temp->treap = NULL;
             }
+
             return;
         }
 
         if (temp->val >= val) {
-            if (temp->left == NULL) {
-                // Inserts a new node at this spot if there is no base node here for it.
-                Node *n = new Node(val);
-
-                n->treap = new Treap();
-                n->treap = n->treap->immutableInsert(val);
-                n->val = Empty;
-                n->isRoute = false;
-
-                temp->left = n;
-                return;
-            }
-            else {
-                temp = temp->left;
-            }
+            temp = temp->left;
         }
         else {
-            if (temp->right == NULL) {
-                // Inserts a new node at this spot if there is no base node here for it.
-                Node *n = new Node(val);
-
-                n->treap = new Treap();
-                n->treap = n->treap->immutableInsert(val);
-                n->val = Empty;
-                n->isRoute = false;
-
-                temp->right = n;
-                return;
-            }
-            else {
-                temp = temp->right;
-            }
+            temp = temp->right;
         }
     }
 }
