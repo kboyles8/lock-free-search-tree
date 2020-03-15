@@ -6,7 +6,7 @@
 
 class SearchTreeTest : public ::testing::Test {
 protected:
-	SearchTree<int> searchtree;
+	SearchTree searchtree;
 };
 
 TEST_F(SearchTreeTest, InsertAndRemoveAndLookup) {

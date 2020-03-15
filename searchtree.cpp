@@ -3,20 +3,19 @@
 #define EMPTY -2147483647
 using namespace std;
 
-template <class T>
 class SearchTree {
 private:
     class Node {
     public:
         bool isRoute {true};
-        T val;
         int weight;
+        int val;
         Treap* treap {NULL};
 
         Node *left {NULL};
         Node *right {NULL};
 
-        Node(T val) {
+        Node(int val) {
             this->val = val;
             this->weight = weightDist(randEngine);
         }
@@ -25,7 +24,7 @@ private:
     Node *head {NULL};
 
 public:
-    void insert(T val) {
+    void insert(int val) {
         if (head == NULL) {
             Node *n = new Node(val);
 
@@ -111,7 +110,7 @@ public:
         }
     }
 
-    void remove(T val) {
+    void remove(int val) {
         if (head == NULL) {
             return;
         }
@@ -178,7 +177,7 @@ public:
         }
     }
 
-    bool lookup(T val) {
+    bool lookup(int val) {
         if (head == NULL) {
             return false;
         }
@@ -212,15 +211,15 @@ public:
         }
     }
 
-    vector<T> rangeQuery(T low, T high) {
-        vector<T> result;
+    vector<int> rangeQuery(int low, int high) {
+        vector<int> result;
         if (head == NULL) {
             return result;
         }
         Node* temp = head;
         vector<Node*> nodesToCheck;
         nodesToCheck.push_back(temp);
-        vector<T> values;
+        vector<int> values;
         
 
         while (!nodesToCheck.empty()) {
