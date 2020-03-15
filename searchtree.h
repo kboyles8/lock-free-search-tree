@@ -1,6 +1,9 @@
 #ifndef _SEARCHTREE_H
 #define _SEARCHTREE_H
 
+#include <bitset.h>
+#include <mrlock.h>
+
 class SearchTree {
 private:
     struct Node {
@@ -16,7 +19,26 @@ private:
         }
     };
 
+    class ScopedMrLock {
+    private:
+        uint32_t handle;
+        MRLock<Bitset> *lock;
+
+    public:
+        ScopedMrLock(MRLock<Bitset> *mrlock, Bitset resources) {
+            lock = mrlock;
+            handle = mrlock->Lock(resources);
+        }
+
+        ~ScopedMrLock() {
+            lock->Unlock(handle);
+        }
+    };
+
     Node *head {NULL};
+
+    MRLock<Bitset> mrlock;
+    Bitset treeLock;
 
 public:
     SearchTree();
