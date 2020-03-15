@@ -1,5 +1,6 @@
 #include <iostream>
 #include <limits>
+#include <mrlock.h>
 
 #include "treap.h"
 #include "searchtree.h"
