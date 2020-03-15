@@ -10,20 +10,15 @@ const int TreapMergeThreshold = 32;
 
 using namespace std;
 
+SearchTree::SearchTree() {
+    // Set up the initial head as a base node
+    head = new Node(Empty);
+    head->treap = new Treap();
+    head->isRoute = false;
+}
+
 void SearchTree::insert(int val) {
-    if (head == NULL) {
-        Node *n = new Node(Empty);
-
-        n->treap = new Treap();
-        n->treap = n->treap->immutableInsert(val);
-        n->isRoute = false;
-
-        head = n;
-        return;
-    }
-
     Node *temp = head;
-
 
     // Search until a base node is found
     while (temp->isRoute) {
@@ -56,15 +51,11 @@ void SearchTree::insert(int val) {
         temp->right = right;
 
         delete(temp->treap);
-        temp->treap = NULL;
+        temp->treap = nullptr;
     }
 }
 
 void SearchTree::remove(int val) {
-    if (head == NULL) {
-        return;
-    }
-
     Node *temp = head;
     Node *tempParent = nullptr;
 
@@ -105,10 +96,6 @@ void SearchTree::remove(int val) {
 }
 
 bool SearchTree::lookup(int val) {
-    if (head == NULL) {
-        return false;
-    }
-
     Node *temp = head;
 
     // Search until a base node is found
@@ -126,17 +113,11 @@ bool SearchTree::lookup(int val) {
 
 vector<int> SearchTree::rangeQuery(int low, int high) {
     vector<int> result;
-    if (head == NULL) {
-        return result;
-    }
-
-    Node* temp;
-
-    vector<Node*> nodesToCheck;
+    vector<Node *> nodesToCheck;
     nodesToCheck.push_back(head);
 
     while (!nodesToCheck.empty()) {
-        temp = nodesToCheck.back();
+        Node *temp = nodesToCheck.back();
         nodesToCheck.pop_back();
 
         // If popped node is base node, perform range query on treap and add it to result.

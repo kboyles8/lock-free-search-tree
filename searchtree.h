@@ -17,7 +17,10 @@ private:
     };
 
     Node *head {NULL};
+
 public:
+    SearchTree();
+
     void insert(int val);
     void remove(int val);
     bool lookup(int val);
