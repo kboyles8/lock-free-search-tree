@@ -5,6 +5,8 @@
 #include "searchtree.h"
 
 const int Empty = numeric_limits<int>::min();
+const int TreapSplitSize = 64;
+
 
 using namespace std;
 
@@ -29,7 +31,7 @@ void SearchTree::insert(int val) {
         {
             temp->treap = temp->treap->immutableInsert(val);
             // If inserting causes the treap to become too large, it splits into two.
-            if (temp->treap->getSize() >= 64)
+            if (temp->treap->getSize() >= TreapSplitSize) {
             {
                 Node *left = new Node(val);
                 left->val = Empty;
