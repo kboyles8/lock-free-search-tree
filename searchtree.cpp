@@ -5,8 +5,8 @@
 #include "searchtree.h"
 
 const int Empty = numeric_limits<int>::min();
-const int TreapSplitSize = 64;
-
+const int TreapSplitThreshold = 64;
+const int TreapMergeThreshold = 16;
 
 using namespace std;
 
@@ -39,7 +39,7 @@ void SearchTree::insert(int val) {
     temp->treap = temp->treap->immutableInsert(val);
 
     // If inserting causes the treap to become too large, split it in two
-    if (temp->treap->getSize() >= TreapSplitSize) {
+    if (temp->treap->getSize() >= TreapSplitThreshold) {
         Node *left = new Node(Empty);
         left->isRoute = false;
 
@@ -66,61 +66,42 @@ void SearchTree::remove(int val) {
     }
 
     Node *temp = head;
-    Node *temp2;
+    Node *tempParent;
 
-    while (true) {
-        // Travels until it finds the base node with the value and performs remove on the treap inside.
-        if (temp->isRoute == false)
-        {
-            temp->treap = temp->treap->immutableRemove(val);
-            
-            // If that would cause the treap to become too small it performs a merge with temp's sibling.
-            if (temp->treap->getSize() <= 16)
-            {
-                if (temp2->left == temp)
-                {
-                    if (temp2->right != NULL && temp2->right->treap != NULL && temp2->right->treap->getSize() <= 16)
-                    {
-                        temp->treap = temp->treap->merge(temp->treap, temp2->right->treap);
-                        Node *deletethis = temp2->right;
-                        temp2->right = NULL;
-                        delete(deletethis->treap);
-                        delete(deletethis);
-                    }
-                }
-
-                else if (temp2->right == temp)
-                {
-                    if (temp2->left != NULL && temp2->left->treap != NULL && temp2->left->treap->getSize() <= 16)
-                    {
-                        temp->treap = temp->treap->merge(temp2->left->treap, temp->treap);
-                        Node *deletethis = temp2->left;
-                        temp2->left = NULL;
-                        delete(deletethis->treap);
-                        delete(deletethis);
-                    }
-
-                }
-            }
-            return;
-        }
-
+    // Search until a base node is found
+    while (temp->isRoute) {
         if (temp->val >= val) {
-            if (temp->left == NULL) {
-                return;
-            }
-            else {
-                temp2 = temp;
-                temp = temp->left;
-            }
+            tempParent = temp;
+            temp = temp->left;
         }
         else {
-            if (temp->right == NULL) {
-                return;
+            tempParent = temp;
+            temp = temp->right;
+        }
+    }
+
+    // Perform the remove
+    temp->treap = temp->treap->immutableRemove(val);
+
+    // If the remove would cause the treap to become too small, attempt to perform a merge with the node's sibling
+    if (temp->treap->getSize() <= TreapMergeThreshold) {
+        if (tempParent->left == temp) {
+            if (tempParent->right != NULL && tempParent->right->treap != NULL && tempParent->right->treap->getSize() <= TreapMergeThreshold) {
+                temp->treap = temp->treap->merge(temp->treap, tempParent->right->treap);
+                Node *deletethis = tempParent->right;
+                tempParent->right = NULL;
+                delete(deletethis->treap);
+                delete(deletethis);
             }
-            else {
-                temp2 = temp;
-                temp = temp->right;
+        }
+
+        else if (tempParent->right == temp) {
+            if (tempParent->left != NULL && tempParent->left->treap != NULL && tempParent->left->treap->getSize() <= TreapMergeThreshold) {
+                temp->treap = temp->treap->merge(tempParent->left->treap, temp->treap);
+                Node *deletethis = tempParent->left;
+                tempParent->left = NULL;
+                delete(deletethis->treap);
+                delete(deletethis);
             }
         }
     }
