@@ -111,30 +111,17 @@ bool SearchTree::lookup(int val) {
 
     Node *temp = head;
 
-    while (true) {
-        // Travels down until it finds the correct base node, performs contains on the treap once it does.
-        if (temp->isRoute == false)
-        {
-            return temp->treap->contains(val);
-        }
-
+    // Search until a base node is found
+    while (temp->isRoute) {
         if (temp->val >= val) {
-            if (temp->left == NULL) {
-                return false;
-            }
-            else {
-                temp = temp->left;
-            }
+            temp = temp->left;
         }
         else {
-            if (temp->right == NULL) {
-                return false;
-            }
-            else {
-                temp = temp->right;
-            }
+            temp = temp->right;
         }
     }
+
+    return temp->treap->contains(val);
 }
 
 vector<int> SearchTree::rangeQuery(int low, int high) {
