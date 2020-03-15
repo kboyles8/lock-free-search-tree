@@ -11,29 +11,29 @@ protected:
 
 TEST_F(SearchTreeTest, InsertAndRemoveAndLookup) {
     searchtree.insert(1);
-    EXPECT_EQ(true, searchtree.lookup(1));
+    EXPECT_TRUE(searchtree.lookup(1));
 
     searchtree.insert(2);
-    EXPECT_EQ(true, searchtree.lookup(1));
+    EXPECT_TRUE(searchtree.lookup(1));
     searchtree.insert(3);
-    EXPECT_EQ(true, searchtree.lookup(1));
+    EXPECT_TRUE(searchtree.lookup(1));
     searchtree.insert(4);
-    EXPECT_EQ(true, searchtree.lookup(1));
+    EXPECT_TRUE(searchtree.lookup(1));
     searchtree.insert(5);
-    EXPECT_EQ(true, searchtree.lookup(1));
+    EXPECT_TRUE(searchtree.lookup(1));
 
     searchtree.remove(1);
-    EXPECT_EQ(false, searchtree.lookup(1));
+    EXPECT_FALSE(searchtree.lookup(1));
 
-    EXPECT_EQ(true, searchtree.lookup(2));
+    EXPECT_TRUE(searchtree.lookup(2));
     searchtree.remove(1);
-    EXPECT_EQ(true, searchtree.lookup(3));
+    EXPECT_TRUE(searchtree.lookup(3));
     searchtree.remove(1);
-    EXPECT_EQ(true, searchtree.lookup(4));
+    EXPECT_TRUE(searchtree.lookup(4));
     searchtree.remove(1);
-    EXPECT_EQ(true, searchtree.lookup(5));
+    EXPECT_TRUE(searchtree.lookup(5));
     searchtree.remove(1);
-    EXPECT_EQ(false, searchtree.lookup(1));
+    EXPECT_FALSE(searchtree.lookup(1));
 }
 
 TEST_F(SearchTreeTest, RangeQuery) {
@@ -74,7 +74,7 @@ TEST_F(SearchTreeTest, SplitAndMergeBulkTest) {
 
     for (int i = 0; i < 1024; i++)
     {
-        EXPECT_EQ(true, searchtree.lookup(i));
+        EXPECT_TRUE(searchtree.lookup(i));
     }
 
     for (int i = 0; i < 1024; i++)
@@ -84,6 +84,6 @@ TEST_F(SearchTreeTest, SplitAndMergeBulkTest) {
 
     for (int i = 0; i < 1024; i++)
     {
-        EXPECT_EQ(false, searchtree.lookup(i));
+        EXPECT_FALSE(searchtree.lookup(i));
     }
 }
