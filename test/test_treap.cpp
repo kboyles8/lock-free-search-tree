@@ -167,11 +167,17 @@ TEST_F(TreapTest, FullSplit) {
 TEST_F(TreapTest, SplitEmpty) {
     ASSERT_EQ(treap.getSize(), 0);
 
-    // Split the treap
-    treap.split(&left, &right);
+    // Empty treaps can't be split
+    bool correctException = false;
+    try {
+        treap.split(&left, &right);
+    } catch (logic_error e) {
+        correctException = true;
+    } catch (...) { }
 
-    ASSERT_EQ(left->getSize(), 0);
-    ASSERT_EQ(right->getSize(), 0);
+    EXPECT_TRUE(correctException);
+    ASSERT_EQ(left, nullptr);
+    ASSERT_EQ(right, nullptr);
 }
 
 TEST_F(TreapTest, MergeFull) {
