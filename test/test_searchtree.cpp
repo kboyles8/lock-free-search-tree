@@ -1,8 +1,13 @@
 #include <gtest/gtest.h>
+#include <thread>
+#include <vector>
 
 #include "../treap.h"
 #include "../searchtree.h"
 
+#define NUM_THREADS 4
+#define PARALLEL_START 0
+#define PARALLEL_END 10000
 
 class SearchTreeTest : public ::testing::Test {
 protected:
@@ -90,5 +95,27 @@ TEST_F(SearchTreeTest, RangeQueryBulkTest) {
         sort(actualQuery.begin(), actualQuery.end());
         ASSERT_EQ(expectedQuery, actualQuery);
     }
+}
 
+static void insertThread(SearchTree *tree, int start, int end, int delta) {
+    for (int i = start; i <= end; i += delta) {
+        tree->insert(i);
+    }
+}
+
+// A very poor, nondeterministic unit test for crude concurrency. Included just for some sanity, but should not be relied on.
+TEST_F(SearchTreeTest, ParallelInsert) {
+    vector<thread> threads;
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.push_back(thread(insertThread, &searchtree, PARALLEL_START + i, PARALLEL_END, NUM_THREADS));
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.at(i).join();
+    }
+
+    for (int i = 0; i <= PARALLEL_END; i++) {
+        ASSERT_TRUE(searchtree.lookup(i));
+    }
 }
