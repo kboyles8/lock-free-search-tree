@@ -4,8 +4,8 @@
 #include "searchtree.h"
 
 #define NUM_THREADS 4
-#define PARALLEL_START 0
-#define PARALLEL_END 10000
+#define START 0
+#define END 10000
 
 using namespace std;
 
@@ -41,7 +41,7 @@ int main(void) {
 	SearchTree searchtree;
 
     for (int i = 0; i < NUM_THREADS; i++) {
-        threads.push_back(thread(mixedThread, &searchtree, PARALLEL_START + i, PARALLEL_END));
+        threads.push_back(thread(mixedThread, &searchtree, START, END));
     }
 
     for (int i = 0; i < NUM_THREADS; i++) {

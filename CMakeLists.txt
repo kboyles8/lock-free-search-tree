@@ -24,6 +24,7 @@ set(
     SOURCE
     ${PROJECT_SOURCE_DIR}/searchtree.cpp
     ${PROJECT_SOURCE_DIR}/treap.cpp
+    ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
 # Add test source files here
