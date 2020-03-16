@@ -62,6 +62,8 @@ private:
     void insert(int val);
     bool remove(int val);
 
+    int getMedianVal();
+
 public:
     Treap();
 
@@ -75,7 +77,7 @@ public:
     int getSize();
 
     static Treap *merge(Treap *left, Treap *right);
-    void split(Treap **left, Treap **right);
+    int split(Treap **left, Treap **right);
 
     void sequentialInsert(int val);
     bool sequentialRemove(int val);

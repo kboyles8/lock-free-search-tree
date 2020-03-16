@@ -443,6 +443,40 @@ bool Treap::remove(int val) {
 }
 
 /**
+ *
+ * Calculates the median value of the treap
+ *
+ * @return int
+ * The median value
+ */
+int Treap::getMedianVal() {
+    // There is no median for an empty Treap
+    if (size == 0) {
+        throw logic_error("Cannot calculate median of a Treap with no elements");
+    }
+
+    vector<int> values;
+
+    // Collect all values
+    for (int i = 0; i < size; i++) {
+        values.push_back(nodes[i].val);
+    }
+
+    // Sort the values
+    sort(values.begin(), values.end());
+
+    // Calculate the median
+    if (size % 2 == 0) {
+        // The median is the average of the two middle values
+        return (values.at(size / 2 - 1) + values.at(size / 2)) / 2;
+    }
+    else {
+        // The median is the middle value
+        return values.at(size / 2);
+    }
+}
+
+/**
  * Performs an immutable insertion of a value into a copy of the treap
  * 
  * @param val
@@ -642,21 +676,24 @@ Treap *Treap::merge(Treap *left, Treap *right) {
  * 
  * @param right
  * The location to store the right split treap
+ *
+ * @returns
+ * The value the treap was split at
  */
-void Treap::split(Treap **left, Treap **right) {
+int Treap::split(Treap **left, Treap **right) {
+    if (size == 0) {
+        throw logic_error("An empty treap cannot be split");
+    }
+
     *left = new Treap();
     *right = new Treap();
-
-    if (size == 0) {
-        // There is nothing to split. Return two empty treaps.
-        return;
-    }
+    int splitVal = getMedianVal();
 
     // Copy the current treap so it can be modified (the current treap should not be changed)
     Treap workingTreap(*this);
 
     // Add a dummy node to split the treap
-    workingTreap.nodes[ControlNode].val = workingTreap.nodes[root].val;
+    workingTreap.nodes[ControlNode].val = splitVal;
     workingTreap.nodes[ControlNode].weight = NegInfinity;
     workingTreap.nodes[ControlNode].parent = NullNode;
     workingTreap.nodes[ControlNode].left = NullNode;
@@ -676,6 +713,8 @@ void Treap::split(Treap **left, Treap **right) {
     if (workingTreap.nodes[ControlNode].right != NullNode) {
         (*right)->root = (*right)->transferNodesFrom(&workingTreap, workingTreap.nodes[ControlNode].right);
     }
+
+    return splitVal;
 }
 
 /**

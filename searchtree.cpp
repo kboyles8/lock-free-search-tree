@@ -49,11 +49,9 @@ void SearchTree::insert(int val) {
         Node *right = new Node(Empty);
         right->isRoute = false;
 
-        int headVal = temp->treap->getRoot();
+        int splitVal = temp->treap->split(&left->treap, &right->treap);
 
-        temp->treap->split(&left->treap, &right->treap);
-
-        temp->val = headVal;
+        temp->val = splitVal;
         temp->isRoute = true;
         temp->left = left;
         temp->right = right;
