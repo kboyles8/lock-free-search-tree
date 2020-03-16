@@ -61,19 +61,19 @@ TEST_F(SearchTreeTest, SplitAndMergeBulkTest) {
     }
 
     for (int i = 0; i < 1024; i++) {
-        EXPECT_TRUE(searchtree.lookup(i));
+        ASSERT_TRUE(searchtree.lookup(i));
     }
 
     for (int i = 0; i < 1024; i++) {
         searchtree.remove(i);
         for (int j = i + 1; j < 1024; j++)
         {
-            EXPECT_TRUE(searchtree.lookup(j));
+            ASSERT_TRUE(searchtree.lookup(j));
         }
     }
 
     for (int i = 0; i < 1024; i++) {
-        EXPECT_FALSE(searchtree.lookup(i));
+        ASSERT_FALSE(searchtree.lookup(i));
     }
 }
 
@@ -88,7 +88,7 @@ TEST_F(SearchTreeTest, RangeQueryBulkTest) {
         expectedQuery.push_back(i);
         actualQuery = searchtree.rangeQuery(100, i);
         sort(actualQuery.begin(), actualQuery.end());
-        EXPECT_EQ(expectedQuery, actualQuery);
+        ASSERT_EQ(expectedQuery, actualQuery);
     }
 
 }
