@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "treap.h"
 #include "searchtree.h"
 
 #define NUM_THREADS 4
