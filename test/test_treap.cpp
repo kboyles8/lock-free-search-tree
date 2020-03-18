@@ -158,7 +158,8 @@ TEST_F(TreapTest, FullSplit) {
             smallestInRight = i;
         }
     }
-    EXPECT_LT(largestInLeft, smallestInRight);
+    EXPECT_LE(largestInLeft, medianVal);
+    EXPECT_LT(medianVal, smallestInRight);
 
     // Ensure the treap was split at the correct value, which is the median of the Treap's values
     EXPECT_EQ(medianVal, actualSplit);
