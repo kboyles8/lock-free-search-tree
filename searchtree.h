@@ -3,6 +3,7 @@
 
 #include <bitset.h>
 #include <mrlock.h>
+#include "treap.h"
 
 class SearchTree {
 private:

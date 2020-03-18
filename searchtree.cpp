@@ -2,7 +2,6 @@
 #include <limits>
 #include <mrlock.h>
 
-#include "treap.h"
 #include "searchtree.h"
 
 const int Empty = numeric_limits<int>::min();
