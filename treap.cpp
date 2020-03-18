@@ -8,8 +8,11 @@
 
 #include "treap.h"
 
-thread_local mt19937 randEngine {(unsigned int)time(NULL)};
-uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
+static const int NegInfinity = numeric_limits<int>::min();
+static const int PosInfinity = numeric_limits<int>::max();
+
+static thread_local mt19937 randEngine {(unsigned int)time(NULL)};
+static uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
 
 Treap::Treap() {};
 

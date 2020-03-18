@@ -15,13 +15,6 @@ typedef int TreapIndex;
 const TreapIndex NullNode = -1;
 const TreapIndex ControlNode = TREAP_NODES;  // The extra node allocated beyond the size of the treap
 
-const int NegInfinity = numeric_limits<int>::min();
-const int PosInfinity = numeric_limits<int>::max();
-
-// Random generator
-extern thread_local mt19937 randEngine;
-extern uniform_int_distribution<int> weightDist;
-
 class Treap {
 private:
     struct TreapNode {
@@ -81,8 +74,8 @@ public:
 
     void sequentialInsert(int val);
     bool sequentialRemove(int val);
-	
-	int getRoot();
+
+    int getRoot();
 };
 
 #endif /* TREAP_H */
