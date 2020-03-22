@@ -471,7 +471,7 @@ int Treap::getMedianVal() {
     // Calculate the median
     if (size % 2 == 0) {
         // The median is the average of the two middle values
-        return (values.at(size / 2 - 1) + values.at(size / 2)) / 2;
+        return (int)(values.at(size / 2 - 1) / 2.0) + (values.at(size / 2) / 2.0);  // Divide each term first to prevent overflow
     }
     else {
         // The median is the middle value
