@@ -34,4 +34,9 @@
 # IDE
 .vscode/*
 !.vscode/launch.json
-build/
+
+# Build folder
+build/*
+
+# Always add the special ".keep" file (to preserve empty directories). MUST BE LAST
+!*.keep
