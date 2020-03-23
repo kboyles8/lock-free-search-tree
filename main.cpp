@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <chrono>
 
 #include "searchtree.h"
 
@@ -63,6 +64,9 @@ int main(void) {
 
     int opsPerThread = NUM_OPS / NUM_THREADS;
 
+    cout << "Running " << NUM_OPS << " random operations total on " << NUM_THREADS << " threads, " << opsPerThread << " operations per thread." << endl;
+
+    high_resolution_clock::time_point start = high_resolution_clock::now();
     for (int i = 0; i < NUM_THREADS; i++) {
         threads.push_back(thread(mixedThread, &searchtree, opsPerThread));
     }
@@ -70,4 +74,10 @@ int main(void) {
     for (int i = 0; i < NUM_THREADS; i++) {
         threads.at(i).join();
     }
+
+    // Calculate the total time taken
+    high_resolution_clock::time_point end = high_resolution_clock::now();
+    duration<double, milli> elapsed = end - start;
+
+    cout << "Finished. (Took " << elapsed.count() << " ms)" << endl;
 }
