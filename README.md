@@ -1,4 +1,4 @@
-# Re-implementation of Lock Free Search Trees
+# Re-implementation of Lock Free Contention Adapting Search Trees
 
 ## Building and Running
 
