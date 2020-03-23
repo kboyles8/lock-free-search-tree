@@ -125,9 +125,10 @@ TEST_F(TreapTest, FullSplit) {
         ASSERT_EQ(i, treap.getSize());
         ASSERT_TRUE(treap.contains(i));
     }
+    int medianVal = (TREAP_NODES + 1) / 2;
 
     // Split the treap
-    treap.split(&left, &right);
+    int actualSplit = treap.split(&left, &right);
 
     // The split is non-deterministic, but there are certain properties that must hold. Test for these
 
@@ -157,19 +158,27 @@ TEST_F(TreapTest, FullSplit) {
             smallestInRight = i;
         }
     }
+    EXPECT_LE(largestInLeft, medianVal);
+    EXPECT_LT(medianVal, smallestInRight);
 
-    // Sometimes, the treap split can end up with an empty tree on the right side, depending on how the tree is structured. Allow this for now
-    EXPECT_LT(largestInLeft, smallestInRight);
+    // Ensure the treap was split at the correct value, which is the median of the Treap's values
+    EXPECT_EQ(medianVal, actualSplit);
 }
 
 TEST_F(TreapTest, SplitEmpty) {
     ASSERT_EQ(treap.getSize(), 0);
 
-    // Split the treap
-    treap.split(&left, &right);
+    // Empty treaps can't be split
+    bool correctException = false;
+    try {
+        treap.split(&left, &right);
+    } catch (logic_error e) {
+        correctException = true;
+    } catch (...) { }
 
-    ASSERT_EQ(left->getSize(), 0);
-    ASSERT_EQ(right->getSize(), 0);
+    EXPECT_TRUE(correctException);
+    ASSERT_EQ(left, nullptr);
+    ASSERT_EQ(right, nullptr);
 }
 
 TEST_F(TreapTest, MergeFull) {
