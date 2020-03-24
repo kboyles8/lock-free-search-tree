@@ -38,7 +38,11 @@ void SearchTree::insert(int val) {
     }
 
     // Insert the value
-    temp->treap = temp->treap.load()->immutableInsert(val);
+    Treap * expected = temp->treap.load();
+    Treap * desired = temp->treap.load()->immutableInsert(val);
+    while (!atomic_compare_exchange_weak(&temp->treap, &expected, desired)) {
+        desired = temp->treap.load()->immutableInsert(val);
+    }
 
     // If inserting causes the treap to become too large, split it in two
     if (temp->treap.load()->getSize() >= TreapSplitThreshold) {
@@ -82,7 +86,11 @@ void SearchTree::remove(int val) {
     }
 
     // Perform the remove
-    temp->treap = temp->treap.load()->immutableRemove(val);
+    Treap * expected = temp->treap.load();
+    Treap * desired = temp->treap.load()->immutableInsert(val);
+    while (!atomic_compare_exchange_weak(&temp->treap, &expected, desired)) {
+        desired = temp->treap.load()->immutableInsert(val);
+    }
 
     // Check if a merge is possible. This is when the node has a parent, and the node's sibling is also a base node
     bool mergeIsPossible = tempParent != nullptr && !tempParent->left->isRoute && !tempParent->right->isRoute;
