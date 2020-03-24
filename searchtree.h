@@ -10,7 +10,7 @@ private:
     struct Node {
         bool isRoute {true};
         int val;
-        Treap* treap {NULL};
+        atomic<Treap*> treap {NULL};
 
         Node *left {NULL};
         Node *right {NULL};
