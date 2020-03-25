@@ -84,11 +84,11 @@ struct lfcat {
 // Help functions
 bool try_replace(lfcat *m, node *b, node *new_b) {
     if (b->parent == nullptr)
-        return CAS(&m->root, b, new_b);
+        return m->root.compare_exchange_strong(b, new_b);
     else if (b->parent->left.load() == b)
-        return CAS(&b->parent->left, b, new_b);
+        return b->parent->left.compare_exchange_strong(b, new_b);
     else if (b->parent->right.load() == b)
-        return CAS(&b->parent->right, b, new_b);
+        return b->parent->right.compare_exchange_strong(b, new_b);
     else
         return false;
 }
@@ -110,7 +110,7 @@ void help_if_needed(lfcatree *t, node *n) {
         n = n->main_node;
 
     if (n->type == join_main && n->neigh2.load() == PREPARING) {
-        CAS(&n->neigh2, PREPARING, ABORTED);
+        n->neigh2.compare_exchange_strong(PREPARING, ABORTED);
     }
     else if (n->type == join_main && n->neigh2.load() > ABORTED) {
         complete_join(t, n);
@@ -286,7 +286,7 @@ find_first:
         res = treap_join(res, done->stack_array[i]->data);
     }
 
-    if (CAS(&my_s->result, NOT_SET, res) && done->size > 1) {
+    if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
         astore(&my_s->more_than_one_base, true);
     }
 
@@ -301,17 +301,17 @@ node *secure_join_left(lfcatree *t, node *b) {
         return nullptr;
     node *m = new node{... = b,  // assign fields from b
                        type = join_main};
-    if (!CAS(&b->parent->left, b, m))
+    if (!b->parent->left.compare_exchange_strong(b, m))
         return nullptr;
     node *n1 = new node{... = n0,  // assign fields from n0
                         type = join_neighbor, main_node = m};
     if (!try_replace(t, n0, n1))
         goto fail0;
-    if (!CAS(&m->parent->join_id, nullptr, m))
+    if (!m->parent->join_id.compare_exchange_strong(nullptr, m))
         goto fail0;
     node *gparent = parent_of(t, m->parent);
     if (gparent == NOT_FOUND ||
-        (gparent != nullptr && !CAS(&gparent->join_id, nullptr, m)))
+        (gparent != nullptr && !gparent->join_id.compare_exchange_strong(nullptr, m)))
         goto fail1;
     m->gparent = gparent;
     m->otherb = m->parent->right.load();
@@ -340,11 +340,11 @@ void complete_join(lfcatree *t, node *m) {
     astore(&m->parent->valid, false);
     node *replacement = m->otherb == m->neigh1 ? n2 : m->otherb;
     if (m->gparent == nullptr) {
-        CAS(&t->root, m->parent, replacement);
+        t->root.compare_exchange_strong(m->parent, replacement);
     }
     else if (m->gparent->left.load() == m->parent) {
-        CAS(&m->gparent->left, m->parent, replacement);
-        CAS(&m->gparent->join_id, m, nullptr);
+        m->gparent->left.compare_exchange_strong(m->parent, replacement);
+        m->gparent->join_id.compare_exchange_strong(m, nullptr);
     }
     else if (m->gparent->right.load() == m->parent) {
         ...  // Symmetric case
