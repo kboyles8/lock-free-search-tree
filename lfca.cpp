@@ -4,6 +4,10 @@
  * modification to format and syntax for use with the C++ project.
  */
 
+#include <atomic>
+
+using namespace std;
+
 // Constants
 #define CONT_CONTRIB 250     // For adaptation
 #define LOW_CONT_CONTRIB 1   // ...
@@ -23,33 +27,33 @@ enum contention_info {
 
 // Data Structures
 struct route_node {
-    int key;                      // Split key
-    atomic node *left;            // < key
-    atomic node *right;           // >= key
-    atomic bool valid = true;     // Used for join
-    atomic node *join_id = NULL;  // ...
+    int key;                          // Split key
+    atomic<node *> left;              // < key
+    atomic<node *> right;             // >= key
+    atomic<bool> valid{true};         // Used for join
+    atomic<node *> join_id{nullptr};  // ...
 };
 
 struct normal_base {
-    treap *data = NULL;   // Items in the set
-    int stat = 0;         // Statistics variable
-    node *parent = NULL;  // Parent node or NULL (root)
+    treap *data = nullptr;   // Items in the set
+    int stat = 0;            // Statistics variable
+    node *parent = nullptr;  // Parent node or NULL (root)
 };
 
 struct join_main : normal_base {
-    node *neigh1;                    // First (not joined) neighbor base
-    atomic node *neigh = PREPARING;  // Joined n...
-    node *gparent;                   // Grand parent
-    node *otherb;                    // Other branch
+    node *neigh1;                     // First (not joined) neighbor base
+    atomic<node *> neigh{PREPARING};  // Joined n...
+    node *gparent;                    // Grand parent
+    node *otherb;                     // Other branch
 };
 
 struct join_neighbor : normal_base {
-    node *main_node  // The main node for the join
+    node *main_node;  // The main node for the join
 };
 
-struct rs {                          // Result storage for range queries
-    atomic treap *result = NOT_SET;  // The result
-    atomic bool more_than_one_base = false;
+struct rs {                           // Result storage for range queries
+    atomic<treap *> result{NOT_SET};  // The result
+    atomic<bool> more_than_one_base{false};
 };
 
 struct range_base : normal_base {
@@ -71,12 +75,12 @@ struct node : normal_base, range_base, join_main, join_neighbor {
 };
 
 struct lfcat {
-    atomic node *root;
+    atomic<node *> root;
 };
 
 // Help functions
 bool try_replace(lfcat *m, node *b, node *new_b) {
-    if (b->parent == NULL)
+    if (b->parent == nullptr)
         return CAS(&m->root, b, new_b);
     else if (aload(&b->parent->left) == b)
         return CAS(&b->parent->left, b, new_b);
