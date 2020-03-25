@@ -5,56 +5,66 @@
  */
 
 // Constants
-#define CONT_CONTRIB       // For adaptation
-#define LOW_CONT_CONTRIB   // ...
-#define RANGE_CONTRIB      // ...
-#define HIGH_CONT          // ...
-#define LOW_CONT -         // ...
-#define NOT_FOUND (node *) // Special pointers
-#define NOT_SET (treap *)1 // ...
-#define PREPARING (node *) // Used for join
-#define DONE (node *)      // ...
-#define ABORTED (node *)   // ...
-enum contention_info { contended, uncontened, noinfo };
+#define CONT_CONTRIB        // For adaptation
+#define LOW_CONT_CONTRIB    // ...
+#define RANGE_CONTRIB       // ...
+#define HIGH_CONT           // ...
+#define LOW_CONT -          // ...
+#define NOT_FOUND (node *)  // Special pointers
+#define NOT_SET (treap *)1  // ...
+#define PREPARING (node *)  // Used for join
+#define DONE (node *)       // ...
+#define ABORTED (node *)    // ...
+enum contention_info {
+    contended,
+    uncontened,
+    noinfo
+};
 
 // Data Structures
 struct route_node {
-    int key;                     // Split key
-    atomic node *left;           // < key
-    atomic node *right;          // >= key
-    atomic bool valid = true;    // Used for join
-    atomic node *join_id = NULL; // ...
+    int key;                      // Split key
+    atomic node *left;            // < key
+    atomic node *right;           // >= key
+    atomic bool valid = true;     // Used for join
+    atomic node *join_id = NULL;  // ...
 };
 
 struct normal_base {
-    treap *data = NULL;  // Items in the set
-    int stat = 0;        // Statistics variable
-    node *parent = NULL; // Parent node or NULL (root)
+    treap *data = NULL;   // Items in the set
+    int stat = 0;         // Statistics variable
+    node *parent = NULL;  // Parent node or NULL (root)
 };
 
 struct join_main : normal_base {
-    node *neigh1;                   // First (not joined) neighbor base
-    atomic node *neigh = PREPARING; // Joined n...
-    node *gparent;                  // Grand parent
-    node *otherb;                   // Other branch
+    node *neigh1;                    // First (not joined) neighbor base
+    atomic node *neigh = PREPARING;  // Joined n...
+    node *gparent;                   // Grand parent
+    node *otherb;                    // Other branch
 };
 
 struct join_neighbor : normal_base {
-    node *main_node // The main node for the join
+    node *main_node  // The main node for the join
 };
 
-struct rs {                         // Result storage for range queries
-    atomic treap *result = NOT_SET; // The result
+struct rs {                          // Result storage for range queries
+    atomic treap *result = NOT_SET;  // The result
     atomic bool more_than_one_base = false;
 };
 
 struct range_base : normal_base {
     int lo;
-    int hi; // Low and high key
+    int hi;  // Low and high key
     rs *storage;
 };
 
-enum node_type { route, normal, join_main, join_neighbor, range };
+enum node_type {
+    route,
+    normal,
+    join_main,
+    join_neighbor,
+    range
+};
 
 struct node : normal_base, range_base, join_main, join_neighbor {
     node_type type;
@@ -149,9 +159,13 @@ bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
 }
 
 // Public interface
-bool insert(lfcat *m, int i) { return do_update(m, treap_insert, i); }
+bool insert(lfcat *m, int i) {
+    return do_update(m, treap_insert, i);
+}
 
-bool remove(lfcat *m, int i) { return do_update(m, treap_remove, i); }
+bool remove(lfcat *m, int i) {
+    return do_update(m, treap_remove, i);
+}
 
 bool lookup(lfcat *m, int i) {
     node *base = find_base_node(aload(&m->root), i);
@@ -186,7 +200,7 @@ node *find_next_base_stack(stack *s) {
 }
 
 node *new_range_base(node *b, int lo, int hi, rs *s) {
-    return new node{... = b, // assign fields from b (TODO)
+    return new node{... = b,  // assign fields from b (TODO)
                     lo = lo, hi = hi, storage = s};
 }
 
@@ -223,7 +237,7 @@ find_first:
         goto find_first;
     }
 
-    while (true) { // Find remaining base nodes
+    while (true) {  // Find remaining base nodes
         push(done, b);
         copy_state_to(s, backup_s);
         if (!empty(b->data) && max(b->data) >= hi) {
@@ -277,11 +291,11 @@ node *secure_join_left(lfcatree *t, node *b) {
     node *n0 = leftmost(aload(&b->parent->right));
     if (!is_replaceable(n0))
         return NULL;
-    node *m = new node{... = b, // assign fields from b
+    node *m = new node{... = b,  // assign fields from b
                        type = join_main};
     if (!CAS(&b->parent->left, b, m))
         return NULL;
-    node *n1 = new node{... = n0, // assign fields from n0
+    node *n1 = new node{... = n0,  // assign fields from n0
                         type = join_neighbor, main_node = m};
     if (!try_replace(t, n0, n1))
         goto fail0;
@@ -296,7 +310,7 @@ node *secure_join_left(lfcatree *t, node *b) {
     m->neigh1 = n1;
     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
     if (CAS(&m->neigh2, PREPARING,
-            new node{... = n1, // assign fields from n1
+            new node{... = n1,  // assign fields from n1
                      type = join_neighbor, parent = joinedp, main_node = m,
                      data = treap_join(m, n1)}))
         return m;
@@ -325,7 +339,7 @@ void complete_join(lfcatree *t, node *m) {
         CAS(&m->gparent->join_id, m, NULL);
     }
     else if (aload(&m->gparent->right) == m->parent) {
-        ... // Symmetric case
+        ...  // Symmetric case
     }
     astore(&m->neigh2, DONE);
 }
@@ -339,7 +353,7 @@ void low_contention_adaptation(lfcatree *t, node *b) {
             complete_join(t, m);
     }
     else if (aload(&b->parent->right) == b) {
-        ... // Symmetric case
+        ...  // Symmetric case
     }
 }
 
