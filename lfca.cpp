@@ -165,200 +165,200 @@ int new_stat(node *n, contention_info info) {
     return n->stat;
 }
 
-void adapt_if_needed(lfcatree *t, node *b) {
-    if (!is_replaceable(b))
-        return;
-    else if (new_stat(b, noinfo) > HIGH_CONT)
-        high_contention_adaptation(t, b);
-    else if (new_stat(b, noinfo) < LOW_CONT)
-        low_contention_adaptation(t, b);
-}
+// void adapt_if_needed(lfcatree *t, node *b) {
+//     if (!is_replaceable(b))
+//         return;
+//     else if (new_stat(b, noinfo) > HIGH_CONT)
+//         high_contention_adaptation(t, b);
+//     else if (new_stat(b, noinfo) < LOW_CONT)
+//         low_contention_adaptation(t, b);
+// }
 
-bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
-    contention_info cont_info = uncontened;
-    while (true) {
-        node *base = find_base_node(m->root.load(), i);
-        if (is_replaceable(base)) {
-            bool res;
-            node *newb = new node {
-                type = normal, parent = base->parent,
-                data = u(base->data, i, &res), stat = new_stat(base, cont_info)
-            }
-            if (try_replace(m, base, newb)) {
-                adapt_if_needed(m, newb);
-                return res;
-            }
-        }
-        cont_info = contended;
-        help_if_needed(m, base);
-    }
-}
+// bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
+//     contention_info cont_info = uncontened;
+//     while (true) {
+//         node *base = find_base_node(m->root.load(), i);
+//         if (is_replaceable(base)) {
+//             bool res;
+//             node *newb = new node {
+//                 type = normal, parent = base->parent,
+//                 data = u(base->data, i, &res), stat = new_stat(base, cont_info)
+//             }
+//             if (try_replace(m, base, newb)) {
+//                 adapt_if_needed(m, newb);
+//                 return res;
+//             }
+//         }
+//         cont_info = contended;
+//         help_if_needed(m, base);
+//     }
+// }
 
-// Public interface
-bool insert(lfcat *m, int i) {
-    return do_update(m, treap_insert, i);
-}
+// // Public interface
+// bool insert(lfcat *m, int i) {
+//     return do_update(m, treap_insert, i);
+// }
 
-bool remove(lfcat *m, int i) {
-    return do_update(m, treap_remove, i);
-}
+// bool remove(lfcat *m, int i) {
+//     return do_update(m, treap_remove, i);
+// }
 
-bool lookup(lfcat *m, int i) {
-    node *base = find_base_node(m->root.load(), i);
-    return treap_lookup(base->data, i);
-}
+// bool lookup(lfcat *m, int i) {
+//     node *base = find_base_node(m->root.load(), i);
+//     return treap_lookup(base->data, i);
+// }
 
-void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
-    treap *result = all_in_range(m, lo, hi, nullptr);
-    treap_query(result, lo, hi, trav, aux);
-}
+// void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
+//     treap *result = all_in_range(m, lo, hi, nullptr);
+//     treap_query(result, lo, hi, trav, aux);
+// }
 
-// Range query helper
-node *find_next_base_stack(stack *s) {
-    node *base = pop(s);
-    node *t = top(s);
-    if (t == nullptr)
-        return nullptr;
+// // Range query helper
+// node *find_next_base_stack(stack *s) {
+//     node *base = pop(s);
+//     node *t = top(s);
+//     if (t == nullptr)
+//         return nullptr;
 
-    if (t->left.load() == base)
-        return leftmost_and_stack(t->right.load(), s);
+//     if (t->left.load() == base)
+//         return leftmost_and_stack(t->right.load(), s);
 
-    int be_greater_than = t->key;
-    while (t != nullptr) {
-        if (t->valid.load() && t->key > be_greater_than)
-            return leftmost_and_stack(t->right.load(), s);
-        else {
-            pop(s);
-            t = top(s);
-        }
-    }
-    return nullptr;
-}
+//     int be_greater_than = t->key;
+//     while (t != nullptr) {
+//         if (t->valid.load() && t->key > be_greater_than)
+//             return leftmost_and_stack(t->right.load(), s);
+//         else {
+//             pop(s);
+//             t = top(s);
+//         }
+//     }
+//     return nullptr;
+// }
 
-node *new_range_base(node *b, int lo, int hi, rs *s) {
-    return new node{... = b,  // assign fields from b (TODO)
-                    lo = lo, hi = hi, storage = s};
-}
+// node *new_range_base(node *b, int lo, int hi, rs *s) {
+//     return new node{... = b,  // assign fields from b (TODO)
+//                     lo = lo, hi = hi, storage = s};
+// }
 
-treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
-    stack *s = new_stack();
-    stack *backup_s = new_stack();
-    stack *done = new_stack();
-    node *b;
-    rs *my_s;
+// treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
+//     stack *s = new_stack();
+//     stack *backup_s = new_stack();
+//     stack *done = new_stack();
+//     node *b;
+//     rs *my_s;
 
-find_first:
-    b = find_base_stack(t->root.load(), lo, s);
-    if (help_s != nullptr) {
-        if (b->type != range || help_s != b->storage) {
-            return help_s->result.load();
-        }
-        else {
-            my_s = help_s;
-        }
-    }
-    else if (is_replaceable(b)) {
-        my_s = new rs;
-        node *n = new_range_base(b, lo, hi, my_s);
-        if (!try_replace(t, b, n)) {
-            goto find_first;
-        }
-        replace_top(s, n);
-    }
-    else if (b->type == range && b->hi >= hi) {
-        return all_in_range(t, b->lo, b->hi, b->storage);
-    }
-    else {
-        help_if_needed(t, b);
-        goto find_first;
-    }
+// find_first:
+//     b = find_base_stack(t->root.load(), lo, s);
+//     if (help_s != nullptr) {
+//         if (b->type != range || help_s != b->storage) {
+//             return help_s->result.load();
+//         }
+//         else {
+//             my_s = help_s;
+//         }
+//     }
+//     else if (is_replaceable(b)) {
+//         my_s = new rs;
+//         node *n = new_range_base(b, lo, hi, my_s);
+//         if (!try_replace(t, b, n)) {
+//             goto find_first;
+//         }
+//         replace_top(s, n);
+//     }
+//     else if (b->type == range && b->hi >= hi) {
+//         return all_in_range(t, b->lo, b->hi, b->storage);
+//     }
+//     else {
+//         help_if_needed(t, b);
+//         goto find_first;
+//     }
 
-    while (true) {  // Find remaining base nodes
-        push(done, b);
-        copy_state_to(s, backup_s);
-        if (!empty(b->data) && max(b->data) >= hi) {
-            break;
-        }
+//     while (true) {  // Find remaining base nodes
+//         push(done, b);
+//         copy_state_to(s, backup_s);
+//         if (!empty(b->data) && max(b->data) >= hi) {
+//             break;
+//         }
 
-    find_next_base_node:
-        b = find_next_base_stack(s);
-        if (b == nullptr) {
-            break;
-        }
-        else if (my_s->result.load() != NOT_SET) {
-            return my_s->result.load();
-        }
-        else if (b->type == range && b->storage == my_s) {
-            continue;
-        }
-        else if (is_replaceable(b)) {
-            node *n = new_range_base(b, lo, hi, my_s);
-            if (try_replace(t, b, n)) {
-                replace_top(s, n);
-                continue;
-            }
-            else {
-                copy_state_to(backup_s, s);
-                goto find_next_base_node;
-            }
-        }
-        else {
-            help_if_needed(t, b);
-            copy_state_to(backup_s, s);
-            goto find_next_base_node;
-        }
-    }
+//     find_next_base_node:
+//         b = find_next_base_stack(s);
+//         if (b == nullptr) {
+//             break;
+//         }
+//         else if (my_s->result.load() != NOT_SET) {
+//             return my_s->result.load();
+//         }
+//         else if (b->type == range && b->storage == my_s) {
+//             continue;
+//         }
+//         else if (is_replaceable(b)) {
+//             node *n = new_range_base(b, lo, hi, my_s);
+//             if (try_replace(t, b, n)) {
+//                 replace_top(s, n);
+//                 continue;
+//             }
+//             else {
+//                 copy_state_to(backup_s, s);
+//                 goto find_next_base_node;
+//             }
+//         }
+//         else {
+//             help_if_needed(t, b);
+//             copy_state_to(backup_s, s);
+//             goto find_next_base_node;
+//         }
+//     }
 
-    treap *res = done->stack_array[0]->data;
-    for (int i = 1; i < done->size; i++) {
-        res = treap_join(res, done->stack_array[i]->data);
-    }
+//     treap *res = done->stack_array[0]->data;
+//     for (int i = 1; i < done->size; i++) {
+//         res = treap_join(res, done->stack_array[i]->data);
+//     }
 
-    if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
-        astore(&my_s->more_than_one_base, true);
-    }
+//     if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
+//         astore(&my_s->more_than_one_base, true);
+//     }
 
-    adapt_if_needed(t, done->array[r() % done->size]);
-    return my_s->result.load();
-}
+//     adapt_if_needed(t, done->array[r() % done->size]);
+//     return my_s->result.load();
+// }
 
-// Contention adaptation
-node *secure_join_left(lfcatree *t, node *b) {
-    node *n0 = leftmost(b->parent->right.load());
-    if (!is_replaceable(n0))
-        return nullptr;
-    node *m = new node{... = b,  // assign fields from b
-                       type = join_main};
-    if (!b->parent->left.compare_exchange_strong(b, m))
-        return nullptr;
-    node *n1 = new node{... = n0,  // assign fields from n0
-                        type = join_neighbor, main_node = m};
-    if (!try_replace(t, n0, n1))
-        goto fail0;
-    if (!m->parent->join_id.compare_exchange_strong(nullptr, m))
-        goto fail0;
-    node *gparent = parent_of(t, m->parent);
-    if (gparent == NOT_FOUND ||
-        (gparent != nullptr && !gparent->join_id.compare_exchange_strong(nullptr, m)))
-        goto fail1;
-    m->gparent = gparent;
-    m->otherb = m->parent->right.load();
-    m->neigh1 = n1;
-    node *joinedp = m->otherb == n1 ? gparent : n1->parent;
-    if (CAS(&m->neigh2, PREPARING,
-            new node{... = n1,  // assign fields from n1
-                     type = join_neighbor, parent = joinedp, main_node = m,
-                     data = treap_join(m, n1)}))
-        return m;
-    if (gparent == nullptr)
-        goto fail1;
-    astore(&gparent->join_id, nullptr);
-fail1:
-    astore(&m->parent->join_id, nullptr);
-fail0:
-    astore(&m->neigh2, ABORTED);
-    return nullptr;
-}
+// // Contention adaptation
+// node *secure_join_left(lfcatree *t, node *b) {
+//     node *n0 = leftmost(b->parent->right.load());
+//     if (!is_replaceable(n0))
+//         return nullptr;
+//     node *m = new node{... = b,  // assign fields from b
+//                        type = join_main};
+//     if (!b->parent->left.compare_exchange_strong(b, m))
+//         return nullptr;
+//     node *n1 = new node{... = n0,  // assign fields from n0
+//                         type = join_neighbor, main_node = m};
+//     if (!try_replace(t, n0, n1))
+//         goto fail0;
+//     if (!m->parent->join_id.compare_exchange_strong(nullptr, m))
+//         goto fail0;
+//     node *gparent = parent_of(t, m->parent);
+//     if (gparent == NOT_FOUND ||
+//         (gparent != nullptr && !gparent->join_id.compare_exchange_strong(nullptr, m)))
+//         goto fail1;
+//     m->gparent = gparent;
+//     m->otherb = m->parent->right.load();
+//     m->neigh1 = n1;
+//     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
+//     if (CAS(&m->neigh2, PREPARING,
+//             new node{... = n1,  // assign fields from n1
+//                      type = join_neighbor, parent = joinedp, main_node = m,
+//                      data = treap_join(m, n1)}))
+//         return m;
+//     if (gparent == nullptr)
+//         goto fail1;
+//     astore(&gparent->join_id, nullptr);
+// fail1:
+//     astore(&m->parent->join_id, nullptr);
+// fail0:
+//     astore(&m->neigh2, ABORTED);
+//     return nullptr;
+// }
 
 void complete_join(lfcat *t, node *m) {
     node *n2 = m->neigh2.load();
@@ -393,30 +393,30 @@ void complete_join(lfcat *t, node *m) {
     m->neigh2.store(DONE);
 }
 
-void low_contention_adaptation(lfcatree *t, node *b) {
-    if (b->parent == nullptr)
-        return;
-    if (b->parent->left.load() == b) {
-        node *m = secure_join_left(t, b);
-        if (m != nullptr)
-            complete_join(t, m);
-    }
-    else if (b->parent->right.load() == b) {
-        ...  // Symmetric case
-    }
-}
+// void low_contention_adaptation(lfcatree *t, node *b) {
+//     if (b->parent == nullptr)
+//         return;
+//     if (b->parent->left.load() == b) {
+//         node *m = secure_join_left(t, b);
+//         if (m != nullptr)
+//             complete_join(t, m);
+//     }
+//     else if (b->parent->right.load() == b) {
+//         ...  // Symmetric case
+//     }
+// }
 
-void high_contention_adaptation(lfcatree *m, node *b) {
-    if (less_than_two_items(b->data))
-        return;
-    node* r = new node {
-        type = route,
-        key = split_key(b->data),
-        left = new node{type = normal, parent= r, stat= 0,
-        data = split_left(b->data)}),
-        right = ..., // Symmetric case
-        valid = true
-    };
+// void high_contention_adaptation(lfcatree *m, node *b) {
+//     if (less_than_two_items(b->data))
+//         return;
+//     node* r = new node {
+//         type = route,
+//         key = split_key(b->data),
+//         left = new node{type = normal, parent= r, stat= 0,
+//         data = split_left(b->data)}),
+//         right = ..., // Symmetric case
+//         valid = true
+//     };
 
-    try_replace(m, b, r);
-}
+//     try_replace(m, b, r);
+// }
