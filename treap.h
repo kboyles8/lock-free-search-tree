@@ -2,10 +2,10 @@
 #define TREAP_H
 
 #include <algorithm>
+#include <ctime>
 #include <iterator>
 #include <limits>
 #include <random>
-#include <ctime>
 
 using namespace std;
 
@@ -58,7 +58,7 @@ private:
     int getMedianVal();
 
 public:
-    Treap();
+    Treap() { };
 
     Treap *immutableInsert(int val);
     Treap *immutableRemove(int val);

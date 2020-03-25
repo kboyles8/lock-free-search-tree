@@ -1,9 +1,9 @@
 /**
  * @file treap.cpp
- * 
+ *
  * An immutable treap that stores integers. The immutable operations are thread safe.
  * Algorithms based on pseudo-code from https://algorithmtutor.com/Data-Structures/Tree/Treaps/
- * 
+ *
  */
 
 #include "treap.h"
@@ -11,10 +11,8 @@
 static const int NegInfinity = numeric_limits<int>::min();
 static const int PosInfinity = numeric_limits<int>::max();
 
-static thread_local mt19937 randEngine {(unsigned int)time(NULL)};
-static uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
-
-Treap::Treap() {};
+static thread_local mt19937 randEngine{(unsigned int)time(NULL)};
+static uniform_int_distribution<int> weightDist{NegInfinity + 1, PosInfinity - 1};
 
 /**
  * Creates a new Treap as a copy of another treap
@@ -344,7 +342,7 @@ void Treap::bstInsert(TreapIndex index) {
  * 
  * @param val
  * The value to find
- * 
+ *
  * @return TreapIndex
  * The index of the node containing the search value, or NullNode if it could not be found
  */
@@ -583,7 +581,6 @@ vector<int> Treap::rangeQuery(int min, int max) {
 
     return values;
 }
-
 
 /**
  * Returns the size of the treap
