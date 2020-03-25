@@ -22,6 +22,7 @@ set(
 # Add main source files here
 set(
     SOURCE
+    ${PROJECT_SOURCE_DIR}/lfca.cpp
     ${PROJECT_SOURCE_DIR}/searchtree.cpp
     ${PROJECT_SOURCE_DIR}/treap.cpp
 )
