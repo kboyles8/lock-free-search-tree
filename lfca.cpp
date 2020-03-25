@@ -85,9 +85,9 @@ struct lfcat {
 bool try_replace(lfcat *m, node *b, node *new_b) {
     if (b->parent == nullptr)
         return CAS(&m->root, b, new_b);
-    else if (aload(&b->parent->left) == b)
+    else if (b->parent->left.load() == b)
         return CAS(&b->parent->left, b, new_b);
-    else if (aload(&b->parent->right) == b)
+    else if (b->parent->right.load() == b)
         return CAS(&b->parent->right, b, new_b);
     else
         return false;
@@ -97,10 +97,10 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
 bool is_replaceable(node *n) {
     return (
         n->type == normal ||
-        (n->type == join_main && aload(&n->neigh2) == ABORTED) ||
-        (n->type == join_neighbor && (aload(&n->main_node->neigh2) == ABORTED ||
-                                      aload(&n->main_node->neigh2) == DONE)) ||
-        (n->type == range && aload(&n->storage->result) != NOT_SET)
+        (n->type == join_main && n->neigh2.load() == ABORTED) ||
+        (n->type == join_neighbor && (n->main_node->neigh2.load() == ABORTED ||
+                                      n->main_node->neigh2.load() == DONE)) ||
+        (n->type == range && n->storage->result.load() != NOT_SET)
     );
 }
 
@@ -109,20 +109,20 @@ void help_if_needed(lfcatree *t, node *n) {
     if (n->type == join_neighbor)
         n = n->main_node;
 
-    if (n->type == join_main && aload(&n->neigh2) == PREPARING) {
+    if (n->type == join_main && n->neigh2.load() == PREPARING) {
         CAS(&n->neigh2, PREPARING, ABORTED);
     }
-    else if (n->type == join_main && aload(&n->neigh2) > ABORTED) {
+    else if (n->type == join_main && n->neigh2.load() > ABORTED) {
         complete_join(t, n);
     }
-    else if (n->type == range && aload(&n->storage->result) == NOT_SET) {
+    else if (n->type == range && n->storage->result.load() == NOT_SET) {
         all_in_range(t, n->lo, n->hi, n->storage);
     }
 }
 
 int new_stat(node *n, contention_info info) {
     int range_sub = 0;
-    if (n->type == range && aload(&n->storage->more_than_one_base)) {
+    if (n->type == range && n->storage->more_than_one_base.load()) {
         range_sub = RANGE_CONTRIB;
     }
 
@@ -149,7 +149,7 @@ void adapt_if_needed(lfcatree *t, node *b) {
 bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
     contention_info cont_info = uncontened;
     while (true) {
-        node *base = find_base_node(aload(&m->root), i);
+        node *base = find_base_node(m->root.load(), i);
         if (is_replaceable(base)) {
             bool res;
             node *newb = new node {
@@ -176,7 +176,7 @@ bool remove(lfcat *m, int i) {
 }
 
 bool lookup(lfcat *m, int i) {
-    node *base = find_base_node(aload(&m->root), i);
+    node *base = find_base_node(m->root.load(), i);
     return treap_lookup(base->data, i);
 }
 
@@ -192,13 +192,13 @@ node *find_next_base_stack(stack *s) {
     if (t == nullptr)
         return nullptr;
 
-    if (aload(&t->left) == base)
-        return leftmost_and_stack(aload(&t->right), s);
+    if (t->left.load() == base)
+        return leftmost_and_stack(t->right.load(), s);
 
     int be_greater_than = t->key;
     while (t != nullptr) {
-        if (aload(&t->valid) && t->key > be_greater_than)
-            return leftmost_and_stack(aload(&t->right), s);
+        if (t->valid.load() && t->key > be_greater_than)
+            return leftmost_and_stack(t->right.load(), s);
         else {
             pop(s);
             t = top(s);
@@ -220,10 +220,10 @@ treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
     rs *my_s;
 
 find_first:
-    b = find_base_stack(aload(&t->root), lo, s);
+    b = find_base_stack(t->root.load(), lo, s);
     if (help_s != nullptr) {
         if (b->type != range || help_s != b->storage) {
-            return aload(&help_s->result);
+            return help_s->result.load();
         }
         else {
             my_s = help_s;
@@ -257,8 +257,8 @@ find_first:
         if (b == nullptr) {
             break;
         }
-        else if (aload(&my_s->result) != NOT_SET) {
-            return aload(&my_s->result);
+        else if (my_s->result.load() != NOT_SET) {
+            return my_s->result.load();
         }
         else if (b->type == range && b->storage == my_s) {
             continue;
@@ -291,12 +291,12 @@ find_first:
     }
 
     adapt_if_needed(t, done->array[r() % done->size]);
-    return aload(&my_s->result);
+    return my_s->result.load();
 }
 
 // Contention adaptation
 node *secure_join_left(lfcatree *t, node *b) {
-    node *n0 = leftmost(aload(&b->parent->right));
+    node *n0 = leftmost(b->parent->right.load());
     if (!is_replaceable(n0))
         return nullptr;
     node *m = new node{... = b,  // assign fields from b
@@ -314,7 +314,7 @@ node *secure_join_left(lfcatree *t, node *b) {
         (gparent != nullptr && !CAS(&gparent->join_id, nullptr, m)))
         goto fail1;
     m->gparent = gparent;
-    m->otherb = aload(&m->parent->right);
+    m->otherb = m->parent->right.load();
     m->neigh1 = n1;
     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
     if (CAS(&m->neigh2, PREPARING,
@@ -333,7 +333,7 @@ fail0:
 }
 
 void complete_join(lfcatree *t, node *m) {
-    node *n2 = aload(&m->neigh2);
+    node *n2 = m->neigh2.load();
     if (n2 == DONE)
         return;
     try_replace(t, m->neigh1, n2);
@@ -342,11 +342,11 @@ void complete_join(lfcatree *t, node *m) {
     if (m->gparent == nullptr) {
         CAS(&t->root, m->parent, replacement);
     }
-    else if (aload(&m->gparent->left) == m->parent) {
+    else if (m->gparent->left.load() == m->parent) {
         CAS(&m->gparent->left, m->parent, replacement);
         CAS(&m->gparent->join_id, m, nullptr);
     }
-    else if (aload(&m->gparent->right) == m->parent) {
+    else if (m->gparent->right.load() == m->parent) {
         ...  // Symmetric case
     }
     astore(&m->neigh2, DONE);
@@ -355,12 +355,12 @@ void complete_join(lfcatree *t, node *m) {
 void low_contention_adaptation(lfcatree *t, node *b) {
     if (b->parent == nullptr)
         return;
-    if (aload(&b->parent->left) == b) {
+    if (b->parent->left.load() == b) {
         node *m = secure_join_left(t, b);
         if (m != nullptr)
             complete_join(t, m);
     }
-    else if (aload(&b->parent->right) == b) {
+    else if (b->parent->right.load() == b) {
         ...  // Symmetric case
     }
 }
