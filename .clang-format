@@ -1,0 +1,22 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+Language: Cpp
+# Force pointers to the right for C++.
+DerivePointerAlignment: false
+PointerAlignment: Right
+BreakBeforeBraces: Custom
+BraceWrapping:
+  # AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: true
+  # BeforeLambdaBody: false
+  IndentBraces: false
