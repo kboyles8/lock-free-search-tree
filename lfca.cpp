@@ -177,7 +177,7 @@ bool lookup(lfcat *m, int i) {
 }
 
 void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
-    treap *result = all_in_range(m, lo, hi, NULL);
+    treap *result = all_in_range(m, lo, hi, nullptr);
     treap_query(result, lo, hi, trav, aux);
 }
 
@@ -185,14 +185,14 @@ void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
 node *find_next_base_stack(stack *s) {
     node *base = pop(s);
     node *t = top(s);
-    if (t == NULL)
-        return NULL;
+    if (t == nullptr)
+        return nullptr;
 
     if (aload(&t->left) == base)
         return leftmost_and_stack(aload(&t->right), s);
 
     int be_greater_than = t->key;
-    while (t != NULL) {
+    while (t != nullptr) {
         if (aload(&t->valid) && t->key > be_greater_than)
             return leftmost_and_stack(aload(&t->right), s);
         else {
@@ -200,7 +200,7 @@ node *find_next_base_stack(stack *s) {
             t = top(s);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 node *new_range_base(node *b, int lo, int hi, rs *s) {
@@ -217,7 +217,7 @@ treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
 
 find_first:
     b = find_base_stack(aload(&t->root), lo, s);
-    if (help_s != NULL) {
+    if (help_s != nullptr) {
         if (b->type != range || help_s != b->storage) {
             return aload(&help_s->result);
         }
@@ -250,7 +250,7 @@ find_first:
 
     find_next_base_node:
         b = find_next_base_stack(s);
-        if (b == NULL) {
+        if (b == nullptr) {
             break;
         }
         else if (aload(&my_s->result) != NOT_SET) {
@@ -294,20 +294,20 @@ find_first:
 node *secure_join_left(lfcatree *t, node *b) {
     node *n0 = leftmost(aload(&b->parent->right));
     if (!is_replaceable(n0))
-        return NULL;
+        return nullptr;
     node *m = new node{... = b,  // assign fields from b
                        type = join_main};
     if (!CAS(&b->parent->left, b, m))
-        return NULL;
+        return nullptr;
     node *n1 = new node{... = n0,  // assign fields from n0
                         type = join_neighbor, main_node = m};
     if (!try_replace(t, n0, n1))
         goto fail0;
-    if (!CAS(&m->parent->join_id, NULL, m))
+    if (!CAS(&m->parent->join_id, nullptr, m))
         goto fail0;
     node *gparent = parent_of(t, m->parent);
     if (gparent == NOT_FOUND ||
-        (gparent != NULL && !CAS(&gparent->join_id, NULL, m)))
+        (gparent != nullptr && !CAS(&gparent->join_id, nullptr, m)))
         goto fail1;
     m->gparent = gparent;
     m->otherb = aload(&m->parent->right);
@@ -318,14 +318,14 @@ node *secure_join_left(lfcatree *t, node *b) {
                      type = join_neighbor, parent = joinedp, main_node = m,
                      data = treap_join(m, n1)}))
         return m;
-    if (gparent == NULL)
+    if (gparent == nullptr)
         goto fail1;
-    astore(&gparent->join_id, NULL);
+    astore(&gparent->join_id, nullptr);
 fail1:
-    astore(&m->parent->join_id, NULL);
+    astore(&m->parent->join_id, nullptr);
 fail0:
     astore(&m->neigh2, ABORTED);
-    return NULL;
+    return nullptr;
 }
 
 void complete_join(lfcatree *t, node *m) {
@@ -335,12 +335,12 @@ void complete_join(lfcatree *t, node *m) {
     try_replace(t, m->neigh1, n2);
     astore(&m->parent->valid, false);
     node *replacement = m->otherb == m->neigh1 ? n2 : m->otherb;
-    if (m->gparent == NULL) {
+    if (m->gparent == nullptr) {
         CAS(&t->root, m->parent, replacement);
     }
     else if (aload(&m->gparent->left) == m->parent) {
         CAS(&m->gparent->left, m->parent, replacement);
-        CAS(&m->gparent->join_id, m, NULL);
+        CAS(&m->gparent->join_id, m, nullptr);
     }
     else if (aload(&m->gparent->right) == m->parent) {
         ...  // Symmetric case
@@ -349,11 +349,11 @@ void complete_join(lfcatree *t, node *m) {
 }
 
 void low_contention_adaptation(lfcatree *t, node *b) {
-    if (b->parent == NULL)
+    if (b->parent == nullptr)
         return;
     if (aload(&b->parent->left) == b) {
         node *m = secure_join_left(t, b);
-        if (m != NULL)
+        if (m != nullptr)
             complete_join(t, m);
     }
     else if (aload(&b->parent->right) == b) {
