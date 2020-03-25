@@ -28,6 +28,14 @@ enum contention_info {
     noinfo
 };
 
+// Temporarilly stop warnings for treaps. TODO: link our treap
+struct treap {
+    int a;
+};
+
+// Forward declare node for use in structs
+struct node;
+
 // Data Structures
 struct route_node {
     int key;                          // Split key
@@ -45,7 +53,7 @@ struct normal_base {
 
 struct join_main : virtual normal_base {
     node *neigh1;                     // First (not joined) neighbor base
-    atomic<node *> neigh2 {PREPARING};  // Joined n...
+    atomic<node *> neigh2 {PREPARING};  // Joined n... (neighbor?)
     node *gparent;                    // Grand parent
     node *otherb;                     // Other branch
 };
@@ -81,36 +89,56 @@ struct lfcat {
     atomic<node *> root;
 };
 
+// Forward declare helper functions as needed
+treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) { return nullptr; } // TODO: Convert this next
+void complete_join(lfcat *t, node *m);
+
 // Help functions
 bool try_replace(lfcat *m, node *b, node *new_b) {
-    if (b->parent == nullptr)
-        return m->root.compare_exchange_strong(b, new_b);
-    else if (b->parent->left.load() == b)
-        return b->parent->left.compare_exchange_strong(b, new_b);
-    else if (b->parent->right.load() == b)
-        return b->parent->right.compare_exchange_strong(b, new_b);
-    else
-        return false;
+    node *expectedB = b;
+
+    if (b->parent == nullptr) {
+        return m->root.compare_exchange_strong(expectedB, new_b);
+    }
+    else if (b->parent->left.load() == b) {
+        return b->parent->left.compare_exchange_strong(expectedB, new_b);
+    }
+    else if (b->parent->right.load() == b) {
+        return b->parent->right.compare_exchange_strong(expectedB, new_b);
+    }
+
+    return false;
 }
 
-// TODO: Make this a lot clearer
 bool is_replaceable(node *n) {
-    return (
-        n->type == normal ||
-        (n->type == join_main && n->neigh2.load() == ABORTED) ||
-        (n->type == join_neighbor && (n->main_node->neigh2.load() == ABORTED ||
-                                      n->main_node->neigh2.load() == DONE)) ||
-        (n->type == range && n->storage->result.load() != NOT_SET)
-    );
+    switch(n->type) {
+        case normal:
+            return true;
+
+        case join_main:
+            return n->neigh2.load() == ABORTED;
+
+        case join_neighbor: {
+            node *neigh2local = n->main_node->neigh2.load();
+            return (neigh2local == ABORTED || neigh2local == DONE);
+        }
+
+        case range:
+            return n->storage->result.load() != NOT_SET;
+
+        default:
+            return false;
+    }
 }
 
 // Help functions
-void help_if_needed(lfcatree *t, node *n) {
+void help_if_needed(lfcat *t, node *n) {
     if (n->type == join_neighbor)
         n = n->main_node;
 
     if (n->type == join_main && n->neigh2.load() == PREPARING) {
-        n->neigh2.compare_exchange_strong(PREPARING, ABORTED);
+        node *expectedNeigh2 = PREPARING;
+        n->neigh2.compare_exchange_strong(expectedNeigh2, ABORTED);
     }
     else if (n->type == join_main && n->neigh2.load() > ABORTED) {
         complete_join(t, n);
@@ -129,12 +157,12 @@ int new_stat(node *n, contention_info info) {
     if (info == contended && n->stat <= HIGH_CONT) {
         return n->stat + CONT_CONTRIB - range_sub;
     }
-    else if (info == uncontened && n->stat >= LOW_CONT) {
+
+    if (info == uncontened && n->stat >= LOW_CONT) {
         return n->stat - LOW_CONT_CONTRIB - range_sub;
     }
-    else {
-        return n->stat;
-    }
+
+    return n->stat;
 }
 
 void adapt_if_needed(lfcatree *t, node *b) {
@@ -332,24 +360,37 @@ fail0:
     return nullptr;
 }
 
-void complete_join(lfcatree *t, node *m) {
+void complete_join(lfcat *t, node *m) {
     node *n2 = m->neigh2.load();
-    if (n2 == DONE)
+    if (n2 == DONE) {
         return;
+    }
+
     try_replace(t, m->neigh1, n2);
-    astore(&m->parent->valid, false);
+
+    m->parent->valid.store(false);
+
     node *replacement = m->otherb == m->neigh1 ? n2 : m->otherb;
     if (m->gparent == nullptr) {
-        t->root.compare_exchange_strong(m->parent, replacement);
+        node *expected = m->parent;
+        t->root.compare_exchange_strong(expected, replacement);
     }
     else if (m->gparent->left.load() == m->parent) {
-        m->gparent->left.compare_exchange_strong(m->parent, replacement);
-        m->gparent->join_id.compare_exchange_strong(m, nullptr);
+        node *expected = m->parent;
+        m->gparent->left.compare_exchange_strong(expected, replacement);
+
+        expected = m;
+        m->gparent->join_id.compare_exchange_strong(expected, nullptr);
     }
     else if (m->gparent->right.load() == m->parent) {
-        ...  // Symmetric case
+        node *expected = m->parent;
+        m->gparent->right.compare_exchange_strong(expected, replacement);
+
+        expected = m;
+        m->gparent->join_id.compare_exchange_strong(expected, nullptr);
     }
-    astore(&m->neigh2, DONE);
+
+    m->neigh2.store(DONE);
 }
 
 void low_contention_adaptation(lfcatree *t, node *b) {
