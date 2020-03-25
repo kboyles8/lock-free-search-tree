@@ -2,6 +2,9 @@
  * The code in this file is from "Lock-free contention adapting search trees",
  * by Kjell Winblad, Konstantinos Sagonas, and Jonsson, Bengt, with slight
  * modification to format and syntax for use with the C++ project.
+ *
+ * Major modifications:
+ * The node struct now inherits route_node (as was likely intended)
  */
 
 #include <atomic>
@@ -40,14 +43,14 @@ struct normal_base {
     node *parent = nullptr;  // Parent node or NULL (root)
 };
 
-struct join_main : normal_base {
+struct join_main : virtual normal_base {
     node *neigh1;                     // First (not joined) neighbor base
-    atomic<node *> neigh{PREPARING};  // Joined n...
+    atomic<node *> neigh2 {PREPARING};  // Joined n...
     node *gparent;                    // Grand parent
     node *otherb;                     // Other branch
 };
 
-struct join_neighbor : normal_base {
+struct join_neighbor : virtual normal_base {
     node *main_node;  // The main node for the join
 };
 
@@ -56,7 +59,7 @@ struct rs {                           // Result storage for range queries
     atomic<bool> more_than_one_base{false};
 };
 
-struct range_base : normal_base {
+struct range_base : virtual normal_base {
     int lo;
     int hi;  // Low and high key
     rs *storage;
@@ -70,7 +73,7 @@ enum node_type {
     range
 };
 
-struct node : normal_base, range_base, join_main, join_neighbor {
+struct node : route_node, range_base, join_main, join_neighbor {
     node_type type;
 };
 
@@ -97,7 +100,8 @@ bool is_replaceable(node *n) {
         (n->type == join_main && aload(&n->neigh2) == ABORTED) ||
         (n->type == join_neighbor && (aload(&n->main_node->neigh2) == ABORTED ||
                                       aload(&n->main_node->neigh2) == DONE)) ||
-        (n->type == range && aload(&n->storage->result) != NOT_SET));
+        (n->type == range && aload(&n->storage->result) != NOT_SET)
+    );
 }
 
 // Help functions
