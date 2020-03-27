@@ -8,6 +8,7 @@
  */
 
 #include <atomic>
+#include <stack>
 
 using namespace std;
 
@@ -89,8 +90,126 @@ struct lfcat {
     atomic<node *> root;
 };
 
+// // Range query helper
+node *find_next_base_stack(stack <node> * s) {
+//     node *base = pop(s);
+//     node *t = top(s);
+//     if (t == nullptr)
+//         return nullptr;
+
+//     if (t->left.load() == base)
+//         return leftmost_and_stack(t->right.load(), s);
+
+//     int be_greater_than = t->key;
+//     while (t != nullptr) {
+//         if (t->valid.load() && t->key > be_greater_than)
+//             return leftmost_and_stack(t->right.load(), s);
+//         else {
+//             pop(s);
+//             t = top(s);
+//         }
+//     }
+//     return nullptr;
+ }
+
+node* find_base_stack(node* n, int i, stack <node *> * s) {
+  //  stack_reset(s); I'm not sure what stack_reset means
+    while(n->type == route){
+    s->push(n);
+    if(i < n->key){
+    n = n->left.load();
+    }else {
+    n = n->right.load();
+    }
+    }
+    s->push(n);
+    return n;
+}
+
 // Forward declare helper functions as needed
-treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) { return nullptr; } // TODO: Convert this next
+ treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
+       stack <node *> * s = new stack <node *> (); // = new_stack();
+       stack <node *> * backup_s = new stack <node *> (); // = new_stack();
+       stack <node *> * done = new stack <node *> ();// = new_stack();
+       node *b;
+       rs *my_s;
+
+       find_first:
+       b = find_base_stack(t->root.load(), lo, s);
+       if (help_s != nullptr) {
+//         if (b->type != range || help_s != b->storage) {
+//             return help_s->result.load();
+//         }
+//         else {
+//             my_s = help_s;
+//         }
+       }
+
+//     else if (is_replaceable(b)) {
+//         my_s = new rs;
+//         node *n = new_range_base(b, lo, hi, my_s);
+//         if (!try_replace(t, b, n)) {
+//             goto find_first;
+//         }
+//         replace_top(s, n);
+//     }
+//     else if (b->type == range && b->hi >= hi) {
+//         return all_in_range(t, b->lo, b->hi, b->storage);
+//     }
+//     else {
+//         help_if_needed(t, b);
+//         goto find_first;
+//     }
+
+//     while (true) {  // Find remaining base nodes
+//         push(done, b);
+//         copy_state_to(s, backup_s);
+//         if (!empty(b->data) && max(b->data) >= hi) {
+//             break;
+//         }
+
+//     find_next_base_node:
+//         b = find_next_base_stack(s);
+//         if (b == nullptr) {
+//             break;
+//         }
+//         else if (my_s->result.load() != NOT_SET) {
+//             return my_s->result.load();
+//         }
+//         else if (b->type == range && b->storage == my_s) {
+//             continue;
+//         }
+//         else if (is_replaceable(b)) {
+//             node *n = new_range_base(b, lo, hi, my_s);
+//             if (try_replace(t, b, n)) {
+//                 replace_top(s, n);
+//                 continue;
+//             }
+//             else {
+//                 copy_state_to(backup_s, s);
+//                 goto find_next_base_node;
+//             }
+//         }
+//         else {
+//             help_if_needed(t, b);
+//             copy_state_to(backup_s, s);
+//             goto find_next_base_node;
+//         }
+//     }
+
+//     treap *res = done->stack_array[0]->data;
+//     for (int i = 1; i < done->size; i++) {
+//         res = treap_join(res, done->stack_array[i]->data);
+//     }
+
+//     if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
+//         astore(&my_s->more_than_one_base, true);
+//     }
+
+//     adapt_if_needed(t, done->array[r() % done->size]);
+//     return my_s->result.load();
+ }
+
 void complete_join(lfcat *t, node *m);
 
 // Help functions
@@ -213,113 +332,9 @@ int new_stat(node *n, contention_info info) {
 //     treap_query(result, lo, hi, trav, aux);
 // }
 
-// // Range query helper
-// node *find_next_base_stack(stack *s) {
-//     node *base = pop(s);
-//     node *t = top(s);
-//     if (t == nullptr)
-//         return nullptr;
-
-//     if (t->left.load() == base)
-//         return leftmost_and_stack(t->right.load(), s);
-
-//     int be_greater_than = t->key;
-//     while (t != nullptr) {
-//         if (t->valid.load() && t->key > be_greater_than)
-//             return leftmost_and_stack(t->right.load(), s);
-//         else {
-//             pop(s);
-//             t = top(s);
-//         }
-//     }
-//     return nullptr;
-// }
-
 // node *new_range_base(node *b, int lo, int hi, rs *s) {
 //     return new node{... = b,  // assign fields from b (TODO)
 //                     lo = lo, hi = hi, storage = s};
-// }
-
-// treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
-//     stack *s = new_stack();
-//     stack *backup_s = new_stack();
-//     stack *done = new_stack();
-//     node *b;
-//     rs *my_s;
-
-// find_first:
-//     b = find_base_stack(t->root.load(), lo, s);
-//     if (help_s != nullptr) {
-//         if (b->type != range || help_s != b->storage) {
-//             return help_s->result.load();
-//         }
-//         else {
-//             my_s = help_s;
-//         }
-//     }
-//     else if (is_replaceable(b)) {
-//         my_s = new rs;
-//         node *n = new_range_base(b, lo, hi, my_s);
-//         if (!try_replace(t, b, n)) {
-//             goto find_first;
-//         }
-//         replace_top(s, n);
-//     }
-//     else if (b->type == range && b->hi >= hi) {
-//         return all_in_range(t, b->lo, b->hi, b->storage);
-//     }
-//     else {
-//         help_if_needed(t, b);
-//         goto find_first;
-//     }
-
-//     while (true) {  // Find remaining base nodes
-//         push(done, b);
-//         copy_state_to(s, backup_s);
-//         if (!empty(b->data) && max(b->data) >= hi) {
-//             break;
-//         }
-
-//     find_next_base_node:
-//         b = find_next_base_stack(s);
-//         if (b == nullptr) {
-//             break;
-//         }
-//         else if (my_s->result.load() != NOT_SET) {
-//             return my_s->result.load();
-//         }
-//         else if (b->type == range && b->storage == my_s) {
-//             continue;
-//         }
-//         else if (is_replaceable(b)) {
-//             node *n = new_range_base(b, lo, hi, my_s);
-//             if (try_replace(t, b, n)) {
-//                 replace_top(s, n);
-//                 continue;
-//             }
-//             else {
-//                 copy_state_to(backup_s, s);
-//                 goto find_next_base_node;
-//             }
-//         }
-//         else {
-//             help_if_needed(t, b);
-//             copy_state_to(backup_s, s);
-//             goto find_next_base_node;
-//         }
-//     }
-
-//     treap *res = done->stack_array[0]->data;
-//     for (int i = 1; i < done->size; i++) {
-//         res = treap_join(res, done->stack_array[i]->data);
-//     }
-
-//     if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
-//         astore(&my_s->more_than_one_base, true);
-//     }
-
-//     adapt_if_needed(t, done->array[r() % done->size]);
-//     return my_s->result.load();
 // }
 
 // // Contention adaptation
@@ -420,3 +435,43 @@ void complete_join(lfcat *t, node *m) {
 
 //     try_replace(m, b, r);
 // }
+
+
+/* Rest of the auxiliary functions start here, not formatted yet
+288 node* find_base_node(node* n, int i) {
+289 while(n->type == route){
+290 if(i < n->key){
+291 n = aload(&n->left);
+292 }else{;
+293 n = aload(&n->right);
+294 }
+295 }
+296 return n;
+297 }
+
+311 node* leftmost_and_stack(node* n, stack* s){
+312 while (n->type == route) {
+313 push(s, n);
+314 n = aload(&n->left);
+315 }
+316 push(s, n);
+317 return n;
+318 }
+
+319 node* parent_of(lfcatree* t, node* n){
+320 node* prev_node = NULL;
+321 node* curr_node = aload(&t->root);
+322 while(curr_node != n && curr_node ->type == route){
+323 prev_node = curr_node;
+324 if(n->key < curr_node ->key){
+325 curr_node = aload(&curr_node ->left);
+326 }else {
+327 curr_node = aload(&curr_node ->right);
+328 }
+329 }
+330 if(curr_node ->type != route){
+331 return NOT_FOUND;
+332 }
+333 return prev_node;
+334 }
+*/
