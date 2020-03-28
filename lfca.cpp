@@ -170,6 +170,11 @@ node *parent_of(lfcat *t, node *n) {
     return nullptr; // TODO
 }
 
+// This needs to be a symmetric version of `secure_join_left`. Try to see if it is possible to combine the two functions and switch type based on a parameter to reduce duplicate code.
+node *secure_join_right(lfcat *t, node *b) {
+    return nullptr; // TODO
+}
+
 // Help functions
 bool try_replace(lfcat *m, node *b, node *new_b) {
     node *expectedB = b;
@@ -531,20 +536,25 @@ void complete_join(lfcat *t, node *m) {
     m->neigh2.store(DONE);
 }
 
-/*
-void low_contention_adaptation(lfcatree *t, node *b) {
-    if (b->parent == nullptr)
+void low_contention_adaptation(lfcat *t, node *b) {
+    if (b->parent == nullptr) {
         return;
+    }
+
     if (b->parent->left.load() == b) {
         node *m = secure_join_left(t, b);
-        if (m != nullptr)
+        if (m != nullptr) {
             complete_join(t, m);
+        }
     }
     else if (b->parent->right.load() == b) {
-        ...  // Symmetric case
+        // TODO: Verify that this "symmetric case" is correct
+        node *m = secure_join_right(t, b);
+        if (m != nullptr) {
+            complete_join(t, m);
+        }
     }
 }
-*/
 
 /*
 void high_contention_adaptation(lfcatree *m, node *b) {
