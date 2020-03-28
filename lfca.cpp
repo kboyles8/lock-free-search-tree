@@ -154,28 +154,28 @@ node *leftmost_and_stack(node *n, stack<node *> *s);
 void replace_top(stack<node *> *s, node *n) {
     s->pop;
     s->push(n);
-    return;  // TODO
+    return;  
 }
 
 void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
-    s = backup_s; // I'm assuming parameter 1 is the one being written to
-    return;  // TODO
+    *s = *backup_s; // I'm assuming parameter 1 is the one being written to
+    return;  
 }
 
 // Assuming this finds the leftmost node for a given node (follow left pointer until the end)
 node *leftmost(node *n) {
     node *temp = n;
-    while (temp != NULL)
+    while (temp->left != nullptr)
         temp = temp->left;
-    return temp;  // TODO
+    return temp;
 }
 
 // Opposite version of leftmost for secure_join_right
 node *rightmost(node *n) {
     node *temp = n;
-    while (temp != NULL)
+    while (temp->right != nullptr)
         temp = temp->right;
-    return temp;  // TODO
+    return temp;
 }
 
 // Help functions
