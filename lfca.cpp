@@ -164,7 +164,7 @@ node *leftmost(node *n) {
     return nullptr;  // TODO
 }
 
-// Assuming this finds the parent of a given node. The tree is needed as nodes do not have a pointer to their parent.
+// Assuming this finds the parent of a given node. The tree might be needed to make sure the node is still reachable from the root.
 // Returns NOT_FOUND on failure
 node *parent_of(lfcat *t, node *n) {
     return nullptr; // TODO
