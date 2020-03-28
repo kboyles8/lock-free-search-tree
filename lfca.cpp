@@ -153,6 +153,8 @@ node *leftmost_and_stack(node *n, stack<node *> *s);
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack<node *> *s, node *n) {
+    s->pop;
+    s->push(n);
     return;  // TODO
 }
 
