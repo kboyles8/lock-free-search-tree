@@ -18,16 +18,16 @@
 using namespace std;
 
 // Constants
-#define CONT_CONTRIB 250     // For adaptation
-#define LOW_CONT_CONTRIB 1   // ...
-#define RANGE_CONTRIB 100    // ...
-#define HIGH_CONT 1000       // ...
-#define LOW_CONT -1000       // ...
-#define NOT_FOUND (node *)1  // Special pointers
-#define NOT_SET (vector<int> *)1   // ...
-#define PREPARING (node *)0  // Used for join
-#define DONE (node *)1       // ...
-#define ABORTED (node *)2    // ...
+#define CONT_CONTRIB 250          // For adaptation
+#define LOW_CONT_CONTRIB 1        // ...
+#define RANGE_CONTRIB 100         // ...
+#define HIGH_CONT 1000            // ...
+#define LOW_CONT -1000            // ...
+#define NOT_FOUND (node *)1       // Special pointers
+#define NOT_SET (vector<int> *)1  // ...
+#define PREPARING (node *)0       // Used for join
+#define DONE (node *)1            // ...
+#define ABORTED (node *)2         // ...
 enum contention_info {
     contended,
     uncontened,
@@ -92,7 +92,7 @@ struct join_neighbor : virtual normal_base {
     }
 };
 
-struct rs {                           // Result storage for range queries
+struct rs {                                 // Result storage for range queries
     atomic<vector<int> *> result{NOT_SET};  // The result
     atomic<bool> more_than_one_base{false};
 
@@ -158,8 +158,8 @@ void replace_top(stack<node *> *s, node *n) {
 }
 
 void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
-    *s = *backup_s; // I'm assuming parameter 1 is the one being written to
-    return;  
+    *s = *backup_s;  // I'm assuming parameter 1 is the one being written to
+    return;
 }
 
 // Assuming this finds the leftmost node for a given node (follow left pointer until the end)
@@ -429,7 +429,7 @@ find_first:
     // TODO: `stack_array` likely refers to the internal array that was used to store the struct. This is either the top of the stack, or the bottom, depending on how it was implemented. Verify this and replicate the logic.
     vector<int> *res = new vector<int>(done->front()->data->rangeQuery(lo, hi));  // done->stack_array[0]->data;
     for (size_t i = 1; i < done->size(); i++) {
-        vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi); // res = treap_join(res, done->stack_array[i]->data);
+        vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi);  // res = treap_join(res, done->stack_array[i]->data);
         res->insert(end(*res), begin(resTemp), end(resTemp));
     }
 
@@ -446,12 +446,10 @@ find_first:
 // Contention adaptation
 node *secure_join(lfcat *t, node *b, bool left) {
     node *n0;
-    if (left)
-    {
+    if (left) {
         n0 = leftmost(b->parent->right.load());
     }
-    else
-    {
+    else {
         n0 = rightmost(b->parent->left.load());
     }
 
@@ -463,14 +461,12 @@ node *secure_join(lfcat *t, node *b, bool left) {
     m->type = join_main;
 
     node *expectedNode = b;
-    if (left)
-    {
+    if (left) {
         if (!b->parent->left.compare_exchange_strong(expectedNode, m)) {
             return nullptr;
         }
     }
-    else
-    {
+    else {
         if (!b->parent->right.compare_exchange_strong(expectedNode, m)) {
             return nullptr;
         }
@@ -500,12 +496,10 @@ node *secure_join(lfcat *t, node *b, bool left) {
     }
 
     m->gparent = gparent;
-    if (left)
-    {
+    if (left) {
         m->otherb = m->parent->right.load();
     }
-    else 
-    {
+    else {
         m->otherb = m->parent->left.load();
     }
     m->neigh1 = n1;
