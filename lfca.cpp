@@ -630,16 +630,15 @@ node *find_base_stack(node *n, int i, stack<node *> *s) {
     return n;
 }
 
-/*
-311 node* leftmost_and_stack(node* n, stack* s){
-312 while (n->type == route) {
-313 push(s, n);
-314 n = aload(&n->left);
-315 }
-316 push(s, n);
-317 return n;
-318 }
-*/
+node *leftmost_and_stack(node *n, stack<node *> *s) {
+    while (n->type == route) {
+        s->push(n);
+        n = n->left.load();
+    }
+
+    s->push(n);
+    return n;
+}
 
 /*
 319 node* parent_of(lfcatree* t, node* n){
