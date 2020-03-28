@@ -598,18 +598,18 @@ void high_contention_adaptation(lfcat *m, node *b) {
 }
 
 // Auxilary functions
-/*
-288 node* find_base_node(node* n, int i) {
-289 while(n->type == route){
-290 if(i < n->key){
-291 n = aload(&n->left);
-292 }else{;
-293 n = aload(&n->right);
-294 }
-295 }
-296 return n;
-297 }
-*/
+node *find_base_node(node *n, int i) {
+    while (n->type == route) {
+        if (i < n->key) {
+            n = n->left.load();
+        }
+        else {
+            n = n->right.load();
+        }
+    }
+
+    return n;
+}
 
 node *find_base_stack(node *n, int i, stack<node *> *s) {
     //  stack_reset(s); I'm not sure what stack_reset means
