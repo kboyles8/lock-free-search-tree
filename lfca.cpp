@@ -10,10 +10,9 @@
  * Our custom immutable treaps are used in place of the original
  */
 
-#include <atomic>
-#include <stack>
+#include "lfca.h"
 
-#include "treap.h"
+#include <stack>
 
 using namespace std;
 
@@ -33,9 +32,6 @@ enum contention_info {
     uncontened,
     noinfo
 };
-
-// Forward declare node for use in structs
-struct node;
 
 // Data Structures
 struct route_node {
@@ -133,18 +129,8 @@ struct node : route_node, range_base, join_main, join_neighbor {
     }
 };
 
-struct lfcat {
-    atomic<node *> root;
-};
-
 // Forward declare helper functions as needed
-vector<int> *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
-bool try_replace(lfcat *m, node *b, node *new_b);
-void complete_join(lfcat *t, node *m);
 node *find_base_stack(node *n, int i, stack<node *> *s);
-node *parent_of(lfcat *t, node *n);
-void low_contention_adaptation(lfcat *t, node *b);
-void high_contention_adaptation(lfcat *m, node *b);
 node *find_base_node(node *n, int i);
 node *leftmost_and_stack(node *n, stack<node *> *s);
 
@@ -179,11 +165,11 @@ node *rightmost(node *n) {
 }
 
 // Help functions
-bool try_replace(lfcat *m, node *b, node *new_b) {
+bool LfcaTree::try_replace(node *b, node *new_b) {
     node *expectedB = b;
 
     if (b->parent == nullptr) {
-        return m->root.compare_exchange_strong(expectedB, new_b);
+        return root.compare_exchange_strong(expectedB, new_b);
     }
     else if (b->parent->left.load() == b) {
         return b->parent->left.compare_exchange_strong(expectedB, new_b);
@@ -217,7 +203,7 @@ bool is_replaceable(node *n) {
 }
 
 // Help functions
-void help_if_needed(lfcat *t, node *n) {
+void LfcaTree::help_if_needed(node *n) {
     if (n->type == join_neighbor) {
         n = n->main_node;
     }
@@ -227,10 +213,10 @@ void help_if_needed(lfcat *t, node *n) {
         n->neigh2.compare_exchange_strong(expectedNeigh2, ABORTED);
     }
     else if (n->type == join_main && n->neigh2.load() > ABORTED) {
-        complete_join(t, n);
+        complete_join(n);
     }
     else if (n->type == range && n->storage->result.load() == NOT_SET) {
-        all_in_range(t, n->lo, n->hi, n->storage);
+        all_in_range(n->lo, n->hi, n->storage);
     }
 }
 
@@ -251,23 +237,23 @@ int new_stat(node *n, contention_info info) {
     return n->stat;
 }
 
-void adapt_if_needed(lfcat *t, node *b) {
+void LfcaTree::adapt_if_needed(node *b) {
     if (!is_replaceable(b)) {
         return;
     }
     else if (new_stat(b, noinfo) > HIGH_CONT) {
-        high_contention_adaptation(t, b);
+        high_contention_adaptation(b);
     }
     else if (new_stat(b, noinfo) < LOW_CONT) {
-        low_contention_adaptation(t, b);
+        low_contention_adaptation(b);
     }
 }
 
-bool do_update(lfcat *m, Treap *(*u)(Treap *, int, bool *), int i) {
+bool LfcaTree::do_update(Treap *(*u)(Treap *, int, bool *), int i) {
     contention_info cont_info = uncontened;
 
     while (true) {
-        node *base = find_base_node(m->root.load(), i);
+        node *base = find_base_node(root.load(), i);
         if (is_replaceable(base)) {
             bool res;
 
@@ -277,14 +263,14 @@ bool do_update(lfcat *m, Treap *(*u)(Treap *, int, bool *), int i) {
             newb->data = u(base->data, i, &res);
             newb->stat = new_stat(base, cont_info);
 
-            if (try_replace(m, base, newb)) {
-                adapt_if_needed(m, newb);
+            if (try_replace(base, newb)) {
+                adapt_if_needed(newb);
                 return res;
             }
         }
 
         cont_info = contended;
-        help_if_needed(m, base);
+        help_if_needed(base);
     }
 }
 
@@ -350,7 +336,7 @@ node *new_range_base(node *b, int lo, int hi, rs *s) {
     return new_base;
 }
 
-vector<int> *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
+vector<int> *LfcaTree::all_in_range(int lo, int hi, rs *help_s) {
     stack<node *> *s = new stack<node *>();
     stack<node *> *backup_s = new stack<node *>();
     vector<node *> *done = new vector<node *>();
@@ -358,7 +344,7 @@ vector<int> *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
     rs *my_s;
 
 find_first:
-    b = find_base_stack(t->root.load(), lo, s);
+    b = find_base_stack(root.load(), lo, s);
     if (help_s != nullptr) {
         if (b->type != range || help_s != b->storage) {
             return help_s->result.load();
@@ -371,17 +357,17 @@ find_first:
         my_s = new rs();
         node *n = new_range_base(b, lo, hi, my_s);
 
-        if (!try_replace(t, b, n)) {
+        if (!try_replace(b, n)) {
             goto find_first;
         }
 
         replace_top(s, n);
     }
     else if (b->type == range && b->hi >= hi) {
-        return all_in_range(t, b->lo, b->hi, b->storage);
+        return all_in_range(b->lo, b->hi, b->storage);
     }
     else {
-        help_if_needed(t, b);
+        help_if_needed(b);
         goto find_first;
     }
 
@@ -409,7 +395,7 @@ find_first:
         else if (is_replaceable(b)) {
             node *n = new_range_base(b, lo, hi, my_s);
 
-            if (try_replace(t, b, n)) {
+            if (try_replace(b, n)) {
                 replace_top(s, n);
                 continue;
             }
@@ -419,7 +405,7 @@ find_first:
             }
         }
         else {
-            help_if_needed(t, b);
+            help_if_needed(b);
             copy_state_to(backup_s, s);
             goto find_next_base_node;
         }
@@ -444,7 +430,7 @@ find_first:
 }
 
 // Contention adaptation
-node *secure_join(lfcat *t, node *b, bool left) {
+node *LfcaTree::secure_join(node *b, bool left) {
     node *n0;
     if (left) {
         n0 = leftmost(b->parent->right.load());
@@ -476,7 +462,7 @@ node *secure_join(lfcat *t, node *b, bool left) {
     n1->type = join_neighbor;
     n1->main_node = m;
 
-    if (!try_replace(t, n0, n1)) {
+    if (!try_replace(n0, n1)) {
         m->neigh2.store(ABORTED);
         return nullptr;
     }
@@ -487,7 +473,7 @@ node *secure_join(lfcat *t, node *b, bool left) {
         return nullptr;
     }
 
-    node *gparent = parent_of(t, m->parent);
+    node *gparent = parent_of(m->parent);
     expectedNode = nullptr;
     if (gparent == NOT_FOUND || (gparent != nullptr && !gparent->join_id.compare_exchange_strong(expectedNode, m))) {
         m->parent->join_id.store(nullptr);
@@ -525,20 +511,20 @@ node *secure_join(lfcat *t, node *b, bool left) {
     return nullptr;
 }
 
-void complete_join(lfcat *t, node *m) {
+void LfcaTree::complete_join(node *m) {
     node *n2 = m->neigh2.load();
     if (n2 == DONE) {
         return;
     }
 
-    try_replace(t, m->neigh1, n2);
+    try_replace(m->neigh1, n2);
 
     m->parent->valid.store(false);
 
     node *replacement = m->otherb == m->neigh1 ? n2 : m->otherb;
     if (m->gparent == nullptr) {
         node *expected = m->parent;
-        t->root.compare_exchange_strong(expected, replacement);
+        root.compare_exchange_strong(expected, replacement);
     }
     else if (m->gparent->left.load() == m->parent) {
         node *expected = m->parent;
@@ -558,27 +544,27 @@ void complete_join(lfcat *t, node *m) {
     m->neigh2.store(DONE);
 }
 
-void low_contention_adaptation(lfcat *t, node *b) {
+void LfcaTree::low_contention_adaptation(node *b) {
     if (b->parent == nullptr) {
         return;
     }
 
     if (b->parent->left.load() == b) {
-        node *m = secure_join(t, b, true);
+        node *m = secure_join(b, true);
         if (m != nullptr) {
-            complete_join(t, m);
+            complete_join(m);
         }
     }
     else if (b->parent->right.load() == b) {
         // TODO: Verify that this "symmetric case" is correct
-        node *m = secure_join(t, b, false);
+        node *m = secure_join(b, false);
         if (m != nullptr) {
-            complete_join(t, m);
+            complete_join(m);
         }
     }
 }
 
-void high_contention_adaptation(lfcat *m, node *b) {
+void LfcaTree::high_contention_adaptation(node *b) {
     // Don't split treaps that have too few items
     if (b->data->getSize() < 2) {
         return;
@@ -613,7 +599,7 @@ void high_contention_adaptation(lfcat *m, node *b) {
     r->left = leftNode;
     r->right = rightNode;
 
-    try_replace(m, b, r);
+    try_replace(b, r);
 }
 
 // Auxilary functions
@@ -659,9 +645,9 @@ node *leftmost_and_stack(node *n, stack<node *> *s) {
     return n;
 }
 
-node *parent_of(lfcat *t, node *n) {
+node *LfcaTree::parent_of(node *n) {
     node *prev_node = NULL;
-    node *curr_node = t->root.load();
+    node *curr_node = root.load();
 
     while (curr_node != n && curr_node->type == route) {
         prev_node = curr_node;
