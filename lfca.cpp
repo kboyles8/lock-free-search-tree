@@ -6,10 +6,14 @@
  * Major modifications:
  * The node struct now inherits route_node (as was likely intended)
  * C utilities used in the original implementation, such as stack, now use C++ standard library variants
+ * Range query results are stored in vectors instead of treaps
+ * Our custom immutable treaps are used in place of the original
  */
 
 #include <atomic>
 #include <stack>
+
+#include "treap.h"
 
 using namespace std;
 
@@ -20,7 +24,7 @@ using namespace std;
 #define HIGH_CONT 1000       // ...
 #define LOW_CONT -1000       // ...
 #define NOT_FOUND (node *)1  // Special pointers
-#define NOT_SET (treap *)1   // ...
+#define NOT_SET (vector<int> *)1   // ...
 #define PREPARING (node *)0  // Used for join
 #define DONE (node *)1       // ...
 #define ABORTED (node *)2    // ...
@@ -28,11 +32,6 @@ enum contention_info {
     contended,
     uncontened,
     noinfo
-};
-
-// Temporarilly stop warnings for treaps. TODO: link our treap
-struct treap {
-    int a;
 };
 
 // Forward declare node for use in structs
@@ -57,7 +56,7 @@ struct route_node {
 };
 
 struct normal_base {
-    treap *data = nullptr;   // Items in the set
+    Treap *data = nullptr;   // Items in the set
     int stat = 0;            // Statistics variable
     node *parent = nullptr;  // Parent node or NULL (root)
 
@@ -94,7 +93,7 @@ struct join_neighbor : virtual normal_base {
 };
 
 struct rs {                           // Result storage for range queries
-    atomic<treap *> result{NOT_SET};  // The result
+    atomic<vector<int> *> result{NOT_SET};  // The result
     atomic<bool> more_than_one_base{false};
 
     rs() { }
@@ -139,7 +138,7 @@ struct lfcat {
 };
 
 // Forward declare helper functions as needed
-treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
+vector<int> *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
 bool try_replace(lfcat *m, node *b, node *new_b);
 void complete_join(lfcat *t, node *m);
 node *find_base_stack(node *n, int i, stack<node *> *s);
@@ -255,7 +254,7 @@ void adapt_if_needed(lfcat *t, node *b) {
     }
 }
 
-bool do_update(lfcat *m, treap *(*u)(treap *, int, bool *), int i) {
+bool do_update(lfcat *m, Treap *(*u)(Treap *, int, bool *), int i) {
     contention_info cont_info = uncontened;
 
     while (true) {
@@ -342,10 +341,10 @@ node *new_range_base(node *b, int lo, int hi, rs *s) {
     return new_base;
 }
 
-treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
+vector<int> *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
     stack<node *> *s = new stack<node *>();
     stack<node *> *backup_s = new stack<node *>();
-    stack<node *> *done = new stack<node *>();
+    vector<node *> *done = new vector<node *>();
     node *b;
     rs *my_s;
 
@@ -378,7 +377,7 @@ find_first:
     }
 
     while (true) {  // Find remaining base nodes
-        done->push(b);
+        done->push_back(b);
         copy_state_to(s, backup_s);
         // TODO: replace with our treap functions
         /*
@@ -419,12 +418,13 @@ find_first:
 
     // TODO: replace with our treap functions
     // TODO: `stack_array` likely refers to the internal array that was used to store the struct. This is either the top of the stack, or the bottom, depending on how it was implemented. Verify this and replicate the logic.
-    treap *res = done->top()->data;  // done->stack_array[0]->data;
+    vector<int> *res = new vector<int>(done->front()->data->rangeQuery(lo, hi));  // done->stack_array[0]->data;
     for (int i = 1; i < done->size(); i++) {
-        // res = treap_join(res, done->stack_array[i]->data);
+        vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi); // res = treap_join(res, done->stack_array[i]->data);
+        res->insert(end(*res), begin(resTemp), end(resTemp));
     }
 
-    treap *expectedResult = NOT_SET;
+    vector<int> *expectedResult = NOT_SET;
     if (my_s->result.compare_exchange_strong(expectedResult, res) && done->size() > 1) {
         my_s->more_than_one_base.store(true);
     }
@@ -482,7 +482,7 @@ node *secure_join_left(lfcat *t, node *b) {
     newNeigh2->type = join_neighbor;
     newNeigh2->parent = joinedp;
     newNeigh2->main_node = m;
-    newNeigh2->data = nullptr;  // TODO: treap_join(m, n1)
+    newNeigh2->data = Treap::merge(m->data, n1->data);  // TODO: Verify that all elements in m are less than those in n1
 
     expectedNode = PREPARING;
     if (m->neigh2.compare_exchange_strong(expectedNode, newNeigh2)) {
@@ -553,22 +553,19 @@ void low_contention_adaptation(lfcat *t, node *b) {
 
 void high_contention_adaptation(lfcat *m, node *b) {
     // Don't split treaps that have too few items
-    // TODO: Add our treap function
-    /*
-    if (b->data.size() < 2) {
+    if (b->data->getSize() < 2) {
         return;
     }
-    */
 
     // Create new route node
     node *r = new node();
     r->type = route;
     r->valid = true;
 
-    // TODO: Call treap split here to get these
-    int splitVal;
-    treap *leftTreap;
-    treap *rightTreap;
+    // Split the treap
+    Treap *leftTreap;
+    Treap *rightTreap;
+    int splitVal = b->data->split(&leftTreap, &rightTreap);
 
     // Create left base node
     node *leftNode = new node();
