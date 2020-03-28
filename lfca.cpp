@@ -179,11 +179,6 @@ node *rightmost(node *n) {
     return temp;  // TODO
 }
 
-// This needs to be a symmetric version of `secure_join_left`. Try to see if it is possible to combine the two functions and switch type based on a parameter to reduce duplicate code.
-node *secure_join_right(lfcat *t, node *b) {
-    return nullptr; // TODO
-}
-
 // Help functions
 bool try_replace(lfcat *m, node *b, node *new_b) {
     node *expectedB = b;
@@ -449,8 +444,16 @@ find_first:
 }
 
 // Contention adaptation
-node *secure_join_left(lfcat *t, node *b) {
-    node *n0 = leftmost(b->parent->right.load());
+node *secure_join(lfcat *t, node *b, bool left) {
+    node *n0;
+    if (left)
+    {
+        n0 = leftmost(b->parent->right.load());
+    }
+    else
+    {
+        n0 = rightmost(b->parent->left.load());
+    }
 
     if (!is_replaceable(n0)) {
         return nullptr;
@@ -460,8 +463,17 @@ node *secure_join_left(lfcat *t, node *b) {
     m->type = join_main;
 
     node *expectedNode = b;
-    if (!b->parent->left.compare_exchange_strong(expectedNode, m)) {
-        return nullptr;
+    if (left)
+    {
+        if (!b->parent->left.compare_exchange_strong(expectedNode, m)) {
+            return nullptr;
+        }
+    }
+    else
+    {
+        if (!b->parent->right.compare_exchange_strong(expectedNode, m)) {
+            return nullptr;
+        }
     }
 
     node *n1 = new node(*n0);  // Copy n0
@@ -488,7 +500,14 @@ node *secure_join_left(lfcat *t, node *b) {
     }
 
     m->gparent = gparent;
-    m->otherb = m->parent->right.load();
+    if (left)
+    {
+        m->otherb = m->parent->right.load();
+    }
+    else 
+    {
+        m->otherb = m->parent->left.load();
+    }
     m->neigh1 = n1;
 
     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
@@ -551,14 +570,14 @@ void low_contention_adaptation(lfcat *t, node *b) {
     }
 
     if (b->parent->left.load() == b) {
-        node *m = secure_join_left(t, b);
+        node *m = secure_join(t, b, true);
         if (m != nullptr) {
             complete_join(t, m);
         }
     }
     else if (b->parent->right.load() == b) {
         // TODO: Verify that this "symmetric case" is correct
-        node *m = secure_join_right(t, b);
+        node *m = secure_join(t, b, false);
         if (m != nullptr) {
             complete_join(t, m);
         }
