@@ -159,12 +159,16 @@ void replace_top(stack<node *> *s, node *n) {
 }
 
 void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
+    s = backup_s; // I'm assuming parameter 1 is the one being written to
     return;  // TODO
 }
 
 // Assuming this finds the leftmost node for a given node (follow left pointer until the end)
 node *leftmost(node *n) {
-    return nullptr;  // TODO
+    node *temp = n;
+    while (temp != NULL)
+        temp = temp->left;
+    return temp;  // TODO
 }
 
 // This needs to be a symmetric version of `secure_join_left`. Try to see if it is possible to combine the two functions and switch type based on a parameter to reduce duplicate code.
