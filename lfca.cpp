@@ -127,8 +127,8 @@ enum node_type {
 struct node : route_node, range_base, join_main, join_neighbor {
     node_type type;
 
-    node() : route_node(), range_base(), join_main(), join_neighbor() { }
-    node(const node &other) : route_node(other), range_base(other), join_main(other), join_neighbor(other) {
+    node() : normal_base(), route_node(), range_base(), join_main(), join_neighbor() { }
+    node(const node &other) : normal_base(other), route_node(other), range_base(other), join_main(other), join_neighbor(other) {
         type = other.type;
     }
 };
@@ -152,9 +152,9 @@ node *leftmost_and_stack(node *n, stack<node *> *s);
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack<node *> *s, node *n) {
-    s->pop;
+    s->pop();
     s->push(n);
-    return;  
+    return;
 }
 
 void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
@@ -428,7 +428,7 @@ find_first:
     // TODO: replace with our treap functions
     // TODO: `stack_array` likely refers to the internal array that was used to store the struct. This is either the top of the stack, or the bottom, depending on how it was implemented. Verify this and replicate the logic.
     vector<int> *res = new vector<int>(done->front()->data->rangeQuery(lo, hi));  // done->stack_array[0]->data;
-    for (int i = 1; i < done->size(); i++) {
+    for (size_t i = 1; i < done->size(); i++) {
         vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi); // res = treap_join(res, done->stack_array[i]->data);
         res->insert(end(*res), begin(resTemp), end(resTemp));
     }
