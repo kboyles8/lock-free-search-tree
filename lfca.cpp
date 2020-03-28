@@ -5,6 +5,7 @@
  *
  * Major modifications:
  * The node struct now inherits route_node (as was likely intended)
+ * C utilities used in the original implementation, such as stack, now use C++ standard library variants
  */
 
 #include <atomic>
