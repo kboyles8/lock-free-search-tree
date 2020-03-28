@@ -96,6 +96,9 @@ bool try_replace(lfcat *m, node *b, node *new_b);
 void complete_join(lfcat *t, node *m);
 node *find_base_stack(node *n, int i, stack<node *> *s);
 
+void low_contention_adaptation(lfcat *t, node *b) { }  // TODO
+void high_contention_adaptation(lfcat *m, node *b) { }  // TODO
+
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack<node *> *s, node *n) {
@@ -181,16 +184,17 @@ int new_stat(node *n, contention_info info) {
     return n->stat;
 }
 
-/*
-void adapt_if_needed(lfcatree *t, node *b) {
-    if (!is_replaceable(b))
+void adapt_if_needed(lfcat *t, node *b) {
+    if (!is_replaceable(b)) {
         return;
-    else if (new_stat(b, noinfo) > HIGH_CONT)
+    }
+    else if (new_stat(b, noinfo) > HIGH_CONT) {
         high_contention_adaptation(t, b);
-    else if (new_stat(b, noinfo) < LOW_CONT)
+    }
+    else if (new_stat(b, noinfo) < LOW_CONT) {
         low_contention_adaptation(t, b);
+    }
 }
-*/
 
 /*
 bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
