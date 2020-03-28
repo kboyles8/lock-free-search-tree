@@ -612,9 +612,12 @@ node *find_base_node(node *n, int i) {
 }
 
 node *find_base_stack(node *n, int i, stack<node *> *s) {
-    //  stack_reset(s); I'm not sure what stack_reset means
+    // TODO: determine what stack_reset does. (It may just empty the stack)
+    //  stack_reset(s);
+
     while (n->type == route) {
         s->push(n);
+
         if (i < n->key) {
             n = n->left.load();
         }
@@ -622,6 +625,7 @@ node *find_base_stack(node *n, int i, stack<node *> *s) {
             n = n->right.load();
         }
     }
+
     s->push(n);
     return n;
 }
