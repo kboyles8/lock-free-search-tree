@@ -134,6 +134,19 @@ node *find_base_stack(node *n, int i, stack<node *> *s);
 node *find_base_node(node *n, int i);
 node *leftmost_and_stack(node *n, stack<node *> *s);
 
+// Helper functions for do_update
+Treap *treap_insert(Treap *treap, int val, bool *result) {
+    Treap *newTreap = treap->immutableInsert(val);
+    *result = true;  // Inserts always succeed
+    return newTreap;
+}
+
+Treap *treap_remove(Treap *treap, int val, bool *result) {
+    Treap *newTreap = treap->immutableRemove(val);
+    *result = true;  // TODO: Treaps do not currently report success/failure
+    return newTreap;
+}
+
 // Undefined functions that need implementations:
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
@@ -275,25 +288,23 @@ bool LfcaTree::do_update(Treap *(*u)(Treap *, int, bool *), int i) {
 }
 
 // Public interface
-/*
-bool insert(lfcat *m, int i) {
-    return do_update(m, treap_insert, i);
+bool LfcaTree::insert(int i) {
+    return do_update(treap_insert, i);
 }
 
-bool remove(lfcat *m, int i) {
-    return do_update(m, treap_remove, i);
+bool LfcaTree::remove(int i) {
+    return do_update(treap_remove, i);
 }
 
-bool lookup(lfcat *m, int i) {
-    node *base = find_base_node(m->root.load(), i);
-    return treap_lookup(base->data, i);
+bool LfcaTree::lookup(int i) {
+    node *base = find_base_node(root.load(), i);
+    return base->data->contains(i);
 }
 
-void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
-    treap *result = all_in_range(m, lo, hi, nullptr);
-    treap_query(result, lo, hi, trav, aux);
+vector<int> LfcaTree::rangeQuery(int lo, int hi) {
+    vector<int> *result = all_in_range(lo, hi, nullptr);
+    return *result;  // TODO: memory leak
 }
-*/
 
 // Range query helper
 node *find_next_base_stack(stack<node *> *s) {

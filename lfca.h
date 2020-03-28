@@ -26,10 +26,10 @@ private:
     void help_if_needed(node *n);
 
 public:
-    LfcaTree();
+    LfcaTree() { };
 
-    void insert(int val);
-    void remove(int val);
+    bool insert(int val);
+    bool remove(int val);
     bool lookup(int val);
     std::vector<int> rangeQuery(int low, int high);
 };
