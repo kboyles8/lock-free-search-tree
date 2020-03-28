@@ -148,8 +148,9 @@ bool is_replaceable(node *n) {
 
 // Help functions
 void help_if_needed(lfcat *t, node *n) {
-    if (n->type == join_neighbor)
+    if (n->type == join_neighbor) {
         n = n->main_node;
+    }
 
     if (n->type == join_main && n->neigh2.load() == PREPARING) {
         node *expectedNeigh2 = PREPARING;
