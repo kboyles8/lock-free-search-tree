@@ -148,16 +148,26 @@ void high_contention_adaptation(lfcat *m, node *b) { }  // TODO
 node* find_base_node(node* n, int i) { } // TODO
 node* leftmost_and_stack(node* n, stack<node *> *s) { } // TODO
 
+// Undefined functions that need implementations:
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack<node *> *s, node *n) {
-    return;
+    return;  // TODO
 }
 
-// Also a stub
 void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
+    return;  // TODO
+}
 
-    return;
+// Assuming this finds the leftmost node for a given node (follow left pointer until the end)
+node *leftmost(node *n) {
+    return nullptr;  // TODO
+}
+
+// Assuming this finds the parent of a given node. The tree is needed as nodes do not have a pointer to their parent.
+// Returns NOT_FOUND on failure
+node *parent_of(lfcat *t, node *n) {
+    return nullptr; // TODO
 }
 
 // Help functions
@@ -425,44 +435,68 @@ find_first:
 }
 
 // Contention adaptation
-/*
-node *secure_join_left(lfcatree *t, node *b) {
+node *secure_join_left(lfcat *t, node *b) {
     node *n0 = leftmost(b->parent->right.load());
-    if (!is_replaceable(n0))
+
+    if (!is_replaceable(n0)) {
         return nullptr;
-    node *m = new node{... = b,  // assign fields from b
-                       type = join_main};
-    if (!b->parent->left.compare_exchange_strong(b, m))
+    }
+
+    node *m = new node(*b);  // Copy b
+    m->type = join_main;
+
+    node *expectedNode = b;
+    if (!b->parent->left.compare_exchange_strong(expectedNode, m)) {
         return nullptr;
-    node *n1 = new node{... = n0,  // assign fields from n0
-                        type = join_neighbor, main_node = m};
-    if (!try_replace(t, n0, n1))
-        goto fail0;
-    if (!m->parent->join_id.compare_exchange_strong(nullptr, m))
-        goto fail0;
+    }
+
+    node *n1 = new node(*n0);  // Copy n0
+    n1->type = join_neighbor;
+    n1->main_node = m;
+
+    if (!try_replace(t, n0, n1)) {
+        m->neigh2.store(ABORTED);
+        return nullptr;
+    }
+
+    expectedNode = nullptr;
+    if (!m->parent->join_id.compare_exchange_strong(expectedNode, m)) {
+        m->neigh2.store(ABORTED);
+        return nullptr;
+    }
+
     node *gparent = parent_of(t, m->parent);
-    if (gparent == NOT_FOUND ||
-        (gparent != nullptr && !gparent->join_id.compare_exchange_strong(nullptr, m)))
-        goto fail1;
+    expectedNode = nullptr;
+    if (gparent == NOT_FOUND || (gparent != nullptr && !gparent->join_id.compare_exchange_strong(expectedNode, m))) {
+        m->parent->join_id.store(nullptr);
+        m->neigh2.store(ABORTED);
+        return nullptr;
+    }
+
     m->gparent = gparent;
     m->otherb = m->parent->right.load();
     m->neigh1 = n1;
+
     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
-    if (CAS(&m->neigh2, PREPARING,
-            new node{... = n1,  // assign fields from n1
-                     type = join_neighbor, parent = joinedp, main_node = m,
-                     data = treap_join(m, n1)}))
+    node *newNeigh2 = new node(*n1);  // Copy n1
+    newNeigh2->type = join_neighbor;
+    newNeigh2->parent = joinedp;
+    newNeigh2->main_node = m;
+    newNeigh2->data = nullptr;  // TODO: treap_join(m, n1)
+
+    expectedNode = PREPARING;
+    if (m->neigh2.compare_exchange_strong(expectedNode, newNeigh2)) {
         return m;
-    if (gparent == nullptr)
-        goto fail1;
-    astore(&gparent->join_id, nullptr);
-fail1:
-    astore(&m->parent->join_id, nullptr);
-fail0:
-    astore(&m->neigh2, ABORTED);
+    }
+
+    if (gparent != nullptr) {
+        gparent->join_id.store(nullptr);
+    }
+
+    m->parent->join_id.store(nullptr);
+    m->neigh2.store(ABORTED);
     return nullptr;
 }
-*/
 
 void complete_join(lfcat *t, node *m) {
     node *n2 = m->neigh2.load();
