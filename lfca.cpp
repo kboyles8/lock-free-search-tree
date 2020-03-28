@@ -90,53 +90,14 @@ struct lfcat {
     atomic<node *> root;
 };
 
-// // Range query helper
-node *find_next_base_stack(stack <node *> * s) {
-//     node *base = pop(s);
-//     node *t = top(s);
-//     if (t == nullptr)
-//         return nullptr;
-
-//     if (t->left.load() == base)
-//         return leftmost_and_stack(t->right.load(), s);
-
-//     int be_greater_than = t->key;
-//     while (t != nullptr) {
-//         if (t->valid.load() && t->key > be_greater_than)
-//             return leftmost_and_stack(t->right.load(), s);
-//         else {
-//             pop(s);
-//             t = top(s);
-//         }
-//     }
-//     return nullptr;
- }
-
-node* find_base_stack(node* n, int i, stack <node *> * s) {
-  //  stack_reset(s); I'm not sure what stack_reset means
-    while(n->type == route){
-    s->push(n);
-    if(i < n->key){
-    n = n->left.load();
-    }else {
-    n = n->right.load();
-    }
-    }
-    s->push(n);
-    return n;
-}
+// Forward declare helper functions as needed
+ treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
+ bool try_replace(lfcat *m, node *b, node *new_b);
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack <node *> * s, node * n) {
     return;
 }
-
-// This is a stub, copied from below
- node *new_range_base(node *b, int lo, int hi, rs *s) {
-     return NULL;
- //    return new node{... = b,  // assign fields from b (TODO)
- //                    lo = lo, hi = hi, storage = s};
- }
 
  // Also a stub
  void copy_state_to(stack <node *> * s, stack <node*> * backup_s) {
@@ -144,62 +105,22 @@ void replace_top(stack <node *> * s, node * n) {
      return;
  }
 
-//function definitons
- bool try_replace(lfcat *m, node *b, node *new_b);
-
- treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
-
-
-void complete_join(lfcat *t, node *m) {
-    node *n2 = m->neigh2.load();
-    if (n2 == DONE) {
-        return;
-    }
-
-    try_replace(t, m->neigh1, n2);
-
-    m->parent->valid.store(false);
-
-    node *replacement = m->otherb == m->neigh1 ? n2 : m->otherb;
-    if (m->gparent == nullptr) {
-        node *expected = m->parent;
-        t->root.compare_exchange_strong(expected, replacement);
-    }
-    else if (m->gparent->left.load() == m->parent) {
-        node *expected = m->parent;
-        m->gparent->left.compare_exchange_strong(expected, replacement);
-
-        expected = m;
-        m->gparent->join_id.compare_exchange_strong(expected, nullptr);
-    }
-    else if (m->gparent->right.load() == m->parent) {
-        node *expected = m->parent;
-        m->gparent->right.compare_exchange_strong(expected, replacement);
-
-        expected = m;
-        m->gparent->join_id.compare_exchange_strong(expected, nullptr);
-    }
-
-    m->neigh2.store(DONE);
-}
-
 // Help functions
-void help_if_needed(lfcat *t, node *n) {
-    if (n->type == join_neighbor)
-        n = n->main_node;
+bool try_replace(lfcat *m, node *b, node *new_b) {
+    node *expectedB = b;
 
-    if (n->type == join_main && n->neigh2.load() == PREPARING) {
-        node *expectedNeigh2 = PREPARING;
-        n->neigh2.compare_exchange_strong(expectedNeigh2, ABORTED);
+    if (b->parent == nullptr) {
+        return m->root.compare_exchange_strong(expectedB, new_b);
     }
-    else if (n->type == join_main && n->neigh2.load() > ABORTED) {
-        complete_join(t, n);
+    else if (b->parent->left.load() == b) {
+        return b->parent->left.compare_exchange_strong(expectedB, new_b);
     }
-    else if (n->type == range && n->storage->result.load() == NOT_SET) {
-        all_in_range(t, n->lo, n->hi, n->storage);
+    else if (b->parent->right.load() == b) {
+        return b->parent->right.compare_exchange_strong(expectedB, new_b);
     }
+
+    return false;
 }
-
 
 bool is_replaceable(node *n) {
     switch(n->type) {
@@ -222,6 +143,23 @@ bool is_replaceable(node *n) {
     }
 }
 
+// Help functions
+void help_if_needed(lfcat *t, node *n) {
+    if (n->type == join_neighbor)
+        n = n->main_node;
+
+    if (n->type == join_main && n->neigh2.load() == PREPARING) {
+        node *expectedNeigh2 = PREPARING;
+        n->neigh2.compare_exchange_strong(expectedNeigh2, ABORTED);
+    }
+    else if (n->type == join_main && n->neigh2.load() > ABORTED) {
+        complete_join(t, n);
+    }
+    else if (n->type == range && n->storage->result.load() == NOT_SET) {
+        all_in_range(t, n->lo, n->hi, n->storage);
+    }
+}
+
 int new_stat(node *n, contention_info info) {
     int range_sub = 0;
     if (n->type == range && n->storage->more_than_one_base.load()) {
@@ -239,25 +177,83 @@ int new_stat(node *n, contention_info info) {
     return n->stat;
 }
 
+//void adapt_if_needed(lfcatree *t, node *b) {
+//     if (!is_replaceable(b))
+//         return;
+//     else if (new_stat(b, noinfo) > HIGH_CONT)
+//         high_contention_adaptation(t, b);
+//     else if (new_stat(b, noinfo) < LOW_CONT)
+//         low_contention_adaptation(t, b);
+ //}
 
-// Help functions
-bool try_replace(lfcat *m, node *b, node *new_b) {
-    node *expectedB = b;
+// bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
+//     contention_info cont_info = uncontened;
+//     while (true) {
+//         node *base = find_base_node(m->root.load(), i);
+//         if (is_replaceable(base)) {
+//             bool res;
+//             node *newb = new node {
+//                 type = normal, parent = base->parent,
+//                 data = u(base->data, i, &res), stat = new_stat(base, cont_info)
+//             }
+//             if (try_replace(m, base, newb)) {
+//                 adapt_if_needed(m, newb);
+//                 return res;
+//             }
+//         }
+//         cont_info = contended;
+//         help_if_needed(m, base);
+//     }
+// }
 
-    if (b->parent == nullptr) {
-        return m->root.compare_exchange_strong(expectedB, new_b);
-    }
-    else if (b->parent->left.load() == b) {
-        return b->parent->left.compare_exchange_strong(expectedB, new_b);
-    }
-    else if (b->parent->right.load() == b) {
-        return b->parent->right.compare_exchange_strong(expectedB, new_b);
-    }
+// // Public interface
+// bool insert(lfcat *m, int i) {
+//     return do_update(m, treap_insert, i);
+// }
 
-    return false;
-}
+// bool remove(lfcat *m, int i) {
+//     return do_update(m, treap_remove, i);
+// }
 
-// Forward declare helper functions as needed
+// bool lookup(lfcat *m, int i) {
+//     node *base = find_base_node(m->root.load(), i);
+//     return treap_lookup(base->data, i);
+// }
+
+// void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
+//     treap *result = all_in_range(m, lo, hi, nullptr);
+//     treap_query(result, lo, hi, trav, aux);
+// }
+
+// // Range query helper
+node *find_next_base_stack(stack <node *> * s) {
+//     node *base = pop(s);
+//     node *t = top(s);
+//     if (t == nullptr)
+//         return nullptr;
+
+//     if (t->left.load() == base)
+//         return leftmost_and_stack(t->right.load(), s);
+
+//     int be_greater_than = t->key;
+//     while (t != nullptr) {
+//         if (t->valid.load() && t->key > be_greater_than)
+//             return leftmost_and_stack(t->right.load(), s);
+//         else {
+//             pop(s);
+//             t = top(s);
+//         }
+//     }
+//     return nullptr;
+ }
+
+// This is a stub, copied from below
+ node *new_range_base(node *b, int lo, int hi, rs *s) {
+     return NULL;
+ //    return new node{... = b,  // assign fields from b (TODO)
+ //                    lo = lo, hi = hi, storage = s};
+ }
+
  treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
        stack <node *> * s = new stack <node *> (); // = new_stack();
        stack <node *> * backup_s = new stack <node *> (); // = new_stack();
@@ -338,7 +334,7 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
     // Compare_exchange_strong doesn't work for atomic result and the NOT_SET constant
     // my_s->result is an atomic treap pointer, not_set is a node pointer
      //if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
-    
+
      //    astore(&my_s->more_than_one_base, true); original line here, think this is equivalent
           my_s->more_than_one_base.store(true);
 
@@ -347,54 +343,6 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
     // adapt_if_needed(t, done->array[r() % done->size]);
      return my_s->result.load();
  }
-
- //void adapt_if_needed(lfcatree *t, node *b) {
-//     if (!is_replaceable(b))
-//         return;
-//     else if (new_stat(b, noinfo) > HIGH_CONT)
-//         high_contention_adaptation(t, b);
-//     else if (new_stat(b, noinfo) < LOW_CONT)
-//         low_contention_adaptation(t, b);
- //}
-
-// bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
-//     contention_info cont_info = uncontened;
-//     while (true) {
-//         node *base = find_base_node(m->root.load(), i);
-//         if (is_replaceable(base)) {
-//             bool res;
-//             node *newb = new node {
-//                 type = normal, parent = base->parent,
-//                 data = u(base->data, i, &res), stat = new_stat(base, cont_info)
-//             }
-//             if (try_replace(m, base, newb)) {
-//                 adapt_if_needed(m, newb);
-//                 return res;
-//             }
-//         }
-//         cont_info = contended;
-//         help_if_needed(m, base);
-//     }
-// }
-
-// // Public interface
-// bool insert(lfcat *m, int i) {
-//     return do_update(m, treap_insert, i);
-// }
-
-// bool remove(lfcat *m, int i) {
-//     return do_update(m, treap_remove, i);
-// }
-
-// bool lookup(lfcat *m, int i) {
-//     node *base = find_base_node(m->root.load(), i);
-//     return treap_lookup(base->data, i);
-// }
-
-// void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
-//     treap *result = all_in_range(m, lo, hi, nullptr);
-//     treap_query(result, lo, hi, trav, aux);
-// }
 
 // // Contention adaptation
 // node *secure_join_left(lfcatree *t, node *b) {
@@ -434,6 +382,38 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
 //     return nullptr;
 // }
 
+void complete_join(lfcat *t, node *m) {
+    node *n2 = m->neigh2.load();
+    if (n2 == DONE) {
+        return;
+    }
+
+    try_replace(t, m->neigh1, n2);
+
+    m->parent->valid.store(false);
+
+    node *replacement = m->otherb == m->neigh1 ? n2 : m->otherb;
+    if (m->gparent == nullptr) {
+        node *expected = m->parent;
+        t->root.compare_exchange_strong(expected, replacement);
+    }
+    else if (m->gparent->left.load() == m->parent) {
+        node *expected = m->parent;
+        m->gparent->left.compare_exchange_strong(expected, replacement);
+
+        expected = m;
+        m->gparent->join_id.compare_exchange_strong(expected, nullptr);
+    }
+    else if (m->gparent->right.load() == m->parent) {
+        node *expected = m->parent;
+        m->gparent->right.compare_exchange_strong(expected, replacement);
+
+        expected = m;
+        m->gparent->join_id.compare_exchange_strong(expected, nullptr);
+    }
+
+    m->neigh2.store(DONE);
+}
 
 // void low_contention_adaptation(lfcatree *t, node *b) {
 //     if (b->parent == nullptr)
@@ -463,8 +443,7 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
 //     try_replace(m, b, r);
 // }
 
-
-/* Rest of the auxiliary functions start here, not formatted yet
+/* Auxilary functions
 288 node* find_base_node(node* n, int i) {
 289 while(n->type == route){
 290 if(i < n->key){
@@ -475,6 +454,20 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
 295 }
 296 return n;
 297 }
+
+node* find_base_stack(node* n, int i, stack <node *> * s) {
+  //  stack_reset(s); I'm not sure what stack_reset means
+    while(n->type == route){
+    s->push(n);
+    if(i < n->key){
+    n = n->left.load();
+    }else {
+    n = n->right.load();
+    }
+    }
+    s->push(n);
+    return n;
+}
 
 311 node* leftmost_and_stack(node* n, stack* s){
 312 while (n->type == route) {
