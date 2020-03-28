@@ -93,6 +93,9 @@ struct lfcat {
 // Forward declare helper functions as needed
 treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
 bool try_replace(lfcat *m, node *b, node *new_b);
+void complete_join(lfcat *t, node *m);
+node *find_base_stack(node *n, int i, stack<node *> *s);
+
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack<node *> *s, node *n) {
