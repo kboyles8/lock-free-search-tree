@@ -11,6 +11,7 @@ Language: Cpp
 # Force pointers to the right for C++.
 DerivePointerAlignment: false
 PointerAlignment: Right
+IndentCaseLabels: true
 
 # SpaceBeforeCpp11BracedList: true
 # SpaceBeforeCtorInitializerColon: true
