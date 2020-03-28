@@ -16,6 +16,7 @@ IndentCaseLabels: true
 # SpaceBeforeCpp11BracedList: true
 # SpaceBeforeCtorInitializerColon: true
 Cpp11BracedListStyle: true
+# SpaceInEmptyBlock: true
 
 BreakBeforeBraces: Custom
 BraceWrapping:
