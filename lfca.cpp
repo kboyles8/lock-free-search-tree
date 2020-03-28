@@ -152,21 +152,30 @@ node *leftmost_and_stack(node *n, stack<node *> *s);
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
 void replace_top(stack<node *> *s, node *n) {
+    s->pop;
+    s->push(n);
     return;  // TODO
 }
 
 void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
+    s = backup_s; // I'm assuming parameter 1 is the one being written to
     return;  // TODO
 }
 
 // Assuming this finds the leftmost node for a given node (follow left pointer until the end)
 node *leftmost(node *n) {
-    return nullptr;  // TODO
+    node *temp = n;
+    while (temp != NULL)
+        temp = temp->left;
+    return temp;  // TODO
 }
 
-// This needs to be a symmetric version of `secure_join_left`. Try to see if it is possible to combine the two functions and switch type based on a parameter to reduce duplicate code.
-node *secure_join_right(lfcat *t, node *b) {
-    return nullptr; // TODO
+// Opposite version of leftmost for secure_join_right
+node *rightmost(node *n) {
+    node *temp = n;
+    while (temp != NULL)
+        temp = temp->right;
+    return temp;  // TODO
 }
 
 // Help functions
@@ -435,8 +444,16 @@ find_first:
 }
 
 // Contention adaptation
-node *secure_join_left(lfcat *t, node *b) {
-    node *n0 = leftmost(b->parent->right.load());
+node *secure_join(lfcat *t, node *b, bool left) {
+    node *n0;
+    if (left)
+    {
+        n0 = leftmost(b->parent->right.load());
+    }
+    else
+    {
+        n0 = rightmost(b->parent->left.load());
+    }
 
     if (!is_replaceable(n0)) {
         return nullptr;
@@ -446,8 +463,17 @@ node *secure_join_left(lfcat *t, node *b) {
     m->type = join_main;
 
     node *expectedNode = b;
-    if (!b->parent->left.compare_exchange_strong(expectedNode, m)) {
-        return nullptr;
+    if (left)
+    {
+        if (!b->parent->left.compare_exchange_strong(expectedNode, m)) {
+            return nullptr;
+        }
+    }
+    else
+    {
+        if (!b->parent->right.compare_exchange_strong(expectedNode, m)) {
+            return nullptr;
+        }
     }
 
     node *n1 = new node(*n0);  // Copy n0
@@ -474,7 +500,14 @@ node *secure_join_left(lfcat *t, node *b) {
     }
 
     m->gparent = gparent;
-    m->otherb = m->parent->right.load();
+    if (left)
+    {
+        m->otherb = m->parent->right.load();
+    }
+    else 
+    {
+        m->otherb = m->parent->left.load();
+    }
     m->neigh1 = n1;
 
     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
@@ -537,14 +570,14 @@ void low_contention_adaptation(lfcat *t, node *b) {
     }
 
     if (b->parent->left.load() == b) {
-        node *m = secure_join_left(t, b);
+        node *m = secure_join(t, b, true);
         if (m != nullptr) {
             complete_join(t, m);
         }
     }
     else if (b->parent->right.load() == b) {
         // TODO: Verify that this "symmetric case" is correct
-        node *m = secure_join_right(t, b);
+        node *m = secure_join(t, b, false);
         if (m != nullptr) {
             complete_join(t, m);
         }
