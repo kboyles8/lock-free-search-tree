@@ -556,22 +556,46 @@ void low_contention_adaptation(lfcat *t, node *b) {
     }
 }
 
-/*
-void high_contention_adaptation(lfcatree *m, node *b) {
-    if (less_than_two_items(b->data))
+void high_contention_adaptation(lfcat *m, node *b) {
+    // Don't split treaps that have too few items
+    // TODO: Add our treap function
+    /*
+    if (b->data.size() < 2) {
         return;
-    node* r = new node {
-        type = route,
-        key = split_key(b->data),
-        left = new node{type = normal, parent= r, stat= 0,
-        data = split_left(b->data)}),
-        right = ..., // Symmetric case
-        valid = true
-    };
+    }
+    */
+
+    // Create new route node
+    node *r = new node();
+    r->type = route;
+    r->valid = true;
+
+    // TODO: Call treap split here to get these
+    int splitVal;
+    treap *leftTreap;
+    treap *rightTreap;
+
+    // Create left base node
+    node *leftNode = new node();
+    leftNode->type = normal;
+    leftNode->parent = r;
+    leftNode->stat = 0;
+    leftNode->data = leftTreap;
+
+    // Create right base node
+    node *rightNode = new node();
+    rightNode->type = normal;
+    rightNode->parent = r;
+    rightNode->stat = 0;
+    rightNode->data = rightTreap;
+
+    // Add the treaps to the route node
+    r->key = splitVal;
+    r->left = leftNode;
+    r->right = rightNode;
 
     try_replace(m, b, r);
 }
-*/
 
 // Auxilary functions
 /*
