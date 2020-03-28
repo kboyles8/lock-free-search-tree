@@ -98,6 +98,7 @@ node *find_base_stack(node *n, int i, stack<node *> *s);
 
 void low_contention_adaptation(lfcat *t, node *b) { }  // TODO
 void high_contention_adaptation(lfcat *m, node *b) { }  // TODO
+node* find_base_node(node* n, int i) { } // TODO
 
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
@@ -196,27 +197,30 @@ void adapt_if_needed(lfcat *t, node *b) {
     }
 }
 
-/*
-bool do_update(lfcatree *m, treap *(*u)(treap *, int, bool *), int i) {
+bool do_update(lfcat *m, treap *(*u)(treap *, int, bool *), int i) {
     contention_info cont_info = uncontened;
+
     while (true) {
         node *base = find_base_node(m->root.load(), i);
         if (is_replaceable(base)) {
             bool res;
-            node *newb = new node {
-                type = normal, parent = base->parent,
-                data = u(base->data, i, &res), stat = new_stat(base, cont_info)
-            }
+
+            node *newb = new node();
+            newb->type = normal;
+            newb->parent = base->parent;
+            newb->data = u(base->data, i, &res);
+            newb->stat = new_stat(base, cont_info);
+
             if (try_replace(m, base, newb)) {
                 adapt_if_needed(m, newb);
                 return res;
             }
         }
+
         cont_info = contended;
         help_if_needed(m, base);
     }
 }
-*/
 
 // Public interface
 /*
