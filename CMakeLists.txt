@@ -23,7 +23,7 @@ set(
 set(
     SOURCE
     ${PROJECT_SOURCE_DIR}/lfca.cpp
-    ${PROJECT_SOURCE_DIR}/lfcatree.cpp
+    ${PROJECT_SOURCE_DIR}/searchtree.cpp
     ${PROJECT_SOURCE_DIR}/treap.cpp
 )
 
@@ -31,7 +31,7 @@ set(
 set(
     TEST_SOURCE
     ${PROJECT_SOURCE_DIR}/test/test_treap.cpp
-    ${PROJECT_SOURCE_DIR}/test/test_searchtree.cpp
+    ${PROJECT_SOURCE_DIR}/test/test_lfcatree.cpp
 )
 
 set(MAIN ${PROJECT_SOURCE_DIR}/main.cpp)
