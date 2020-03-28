@@ -333,9 +333,9 @@ node *new_range_base(node *b, int lo, int hi, rs *s) {
 }
 
 treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
-    stack<node *> *s = new stack<node *>();         // = new_stack();
-    stack<node *> *backup_s = new stack<node *>();  // = new_stack();
-    stack<node *> *done = new stack<node *>();      // = new_stack();
+    stack<node *> *s = new stack<node *>();
+    stack<node *> *backup_s = new stack<node *>();
+    stack<node *> *done = new stack<node *>();
     node *b;
     rs *my_s;
 
@@ -349,13 +349,14 @@ find_first:
             my_s = help_s;
         }
     }
-
     else if (is_replaceable(b)) {
-        my_s = new rs;
+        my_s = new rs();
         node *n = new_range_base(b, lo, hi, my_s);
+
         if (!try_replace(t, b, n)) {
             goto find_first;
         }
+
         replace_top(s, n);
     }
     else if (b->type == range && b->hi >= hi) {
@@ -369,10 +370,12 @@ find_first:
     while (true) {  // Find remaining base nodes
         done->push(b);
         copy_state_to(s, backup_s);
-        // Need to replace these with our treap functions versions of these
-        //if (!empty(b->data) && max(b->data) >= hi) {
-        //    break;
-        //}
+        // TODO: replace with our treap functions
+        /*
+        if (!empty(b->data) && max(b->data) >= hi) {
+           break;
+        }
+        */
 
     find_next_base_node:
         b = find_next_base_stack(s);
@@ -387,6 +390,7 @@ find_first:
         }
         else if (is_replaceable(b)) {
             node *n = new_range_base(b, lo, hi, my_s);
+
             if (try_replace(t, b, n)) {
                 replace_top(s, n);
                 continue;
@@ -403,19 +407,19 @@ find_first:
         }
     }
 
-    // Need to replace treap_join with our treap join, not sure what stack_array represents
-    // treap *res = done->stack_array[0]->data;
+    // TODO: replace with our treap functions
+    // TODO: `stack_array` likely refers to the internal array that was used to store the struct. This is either the top of the stack, or the bottom, depending on how it was implemented. Verify this and replicate the logic.
+    treap *res = done->top()->data;  // done->stack_array[0]->data;
     for (int i = 1; i < done->size(); i++) {
         // res = treap_join(res, done->stack_array[i]->data);
     }
 
-    // Compare_exchange_strong doesn't work for atomic result and the NOT_SET constant
-    // my_s->result is an atomic treap pointer, not_set is a node pointer
-    // if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
-    //    astore(&my_s->more_than_one_base, true); original line here, think this is equivalent
-    my_s->more_than_one_base.store(true);
-    // }
+    treap *expectedResult = NOT_SET;
+    if (my_s->result.compare_exchange_strong(expectedResult, res) && done->size() > 1) {
+        my_s->more_than_one_base.store(true);
+    }
 
+    // TODO: Figure out what is going on here. r() is likely a globally defined random function, picking a random array index.
     // adapt_if_needed(t, done->array[r() % done->size]);
     return my_s->result.load();
 }
