@@ -321,12 +321,15 @@ node *find_next_base_stack(stack<node *> *s) {
 }
 
 node *new_range_base(node *b, int lo, int hi, rs *s) {
-    // TODO: implement
-    return NULL;
-    /*
-    return new node{... = b,  // assign fields from b (TODO)
-                   lo = lo, hi = hi, storage = s};
-    */
+    // Copy the other node
+    node *new_base = new node(*b);
+
+    // Set fields
+    new_base->lo = lo;
+    new_base->hi = hi;
+    new_base->storage = s;
+
+    return new_base;
 }
 
 treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
