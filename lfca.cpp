@@ -171,6 +171,14 @@ node *leftmost(node *n) {
     return temp;  // TODO
 }
 
+// Opposite version of leftmost for secure_join_right
+node *rightmost(node *n) {
+    node *temp = n;
+    while (temp != NULL)
+        temp = temp->right;
+    return temp;  // TODO
+}
+
 // This needs to be a symmetric version of `secure_join_left`. Try to see if it is possible to combine the two functions and switch type based on a parameter to reduce duplicate code.
 node *secure_join_right(lfcat *t, node *b) {
     return nullptr; // TODO
