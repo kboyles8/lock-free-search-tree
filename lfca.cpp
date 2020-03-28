@@ -53,10 +53,10 @@ struct normal_base {
 };
 
 struct join_main : virtual normal_base {
-    node *neigh1;                     // First (not joined) neighbor base
-    atomic<node *> neigh2 {PREPARING};  // Joined n... (neighbor?)
-    node *gparent;                    // Grand parent
-    node *otherb;                     // Other branch
+    node *neigh1;                      // First (not joined) neighbor base
+    atomic<node *> neigh2{PREPARING};  // Joined n... (neighbor?)
+    node *gparent;                     // Grand parent
+    node *otherb;                      // Other branch
 };
 
 struct join_neighbor : virtual normal_base {
@@ -91,19 +91,19 @@ struct lfcat {
 };
 
 // Forward declare helper functions as needed
- treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
- bool try_replace(lfcat *m, node *b, node *new_b);
+treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
+bool try_replace(lfcat *m, node *b, node *new_b);
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
-void replace_top(stack <node *> * s, node * n) {
+void replace_top(stack<node *> *s, node *n) {
     return;
 }
 
- // Also a stub
- void copy_state_to(stack <node *> * s, stack <node*> * backup_s) {
+// Also a stub
+void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
 
-     return;
- }
+    return;
+}
 
 // Help functions
 bool try_replace(lfcat *m, node *b, node *new_b) {
@@ -123,7 +123,7 @@ bool try_replace(lfcat *m, node *b, node *new_b) {
 }
 
 bool is_replaceable(node *n) {
-    switch(n->type) {
+    switch (n->type) {
         case normal:
             return true;
 
@@ -232,7 +232,7 @@ void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
 */
 
 // Range query helper
-node *find_next_base_stack(stack <node *> * s) {
+node *find_next_base_stack(stack<node *> *s) {
     /*
     node *base = pop(s);
     node *t = top(s);
@@ -265,9 +265,9 @@ node *new_range_base(node *b, int lo, int hi, rs *s) {
 }
 
 treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s) {
-    stack <node *> * s = new stack <node *> (); // = new_stack();
-    stack <node *> * backup_s = new stack <node *> (); // = new_stack();
-    stack <node *> * done = new stack <node *> ();// = new_stack();
+    stack<node *> *s = new stack<node *>();         // = new_stack();
+    stack<node *> *backup_s = new stack<node *>();  // = new_stack();
+    stack<node *> *done = new stack<node *>();      // = new_stack();
     node *b;
     rs *my_s;
 
@@ -337,7 +337,7 @@ find_first:
 
     // Need to replace treap_join with our treap join, not sure what stack_array represents
     // treap *res = done->stack_array[0]->data;
-    for (int i = 1; i < done->size() ; i++) {
+    for (int i = 1; i < done->size(); i++) {
         // res = treap_join(res, done->stack_array[i]->data);
     }
 
@@ -345,7 +345,7 @@ find_first:
     // my_s->result is an atomic treap pointer, not_set is a node pointer
     // if (my_s->result.compare_exchange_strong(NOT_SET, res) && done->size > 1) {
     //    astore(&my_s->more_than_one_base, true); original line here, think this is equivalent
-          my_s->more_than_one_base.store(true);
+    my_s->more_than_one_base.store(true);
     // }
 
     // adapt_if_needed(t, done->array[r() % done->size]);
@@ -471,15 +471,16 @@ void high_contention_adaptation(lfcatree *m, node *b) {
 297 }
 */
 
-node* find_base_stack(node* n, int i, stack <node *> * s) {
-  //  stack_reset(s); I'm not sure what stack_reset means
-    while(n->type == route){
-    s->push(n);
-    if(i < n->key){
-    n = n->left.load();
-    }else {
-    n = n->right.load();
-    }
+node *find_base_stack(node *n, int i, stack<node *> *s) {
+    //  stack_reset(s); I'm not sure what stack_reset means
+    while (n->type == route) {
+        s->push(n);
+        if (i < n->key) {
+            n = n->left.load();
+        }
+        else {
+            n = n->right.load();
+        }
     }
     s->push(n);
     return n;
