@@ -99,6 +99,7 @@ node *find_base_stack(node *n, int i, stack<node *> *s);
 void low_contention_adaptation(lfcat *t, node *b) { }  // TODO
 void high_contention_adaptation(lfcat *m, node *b) { }  // TODO
 node* find_base_node(node* n, int i) { } // TODO
+node* leftmost_and_stack(node* n, stack<node *> *s) { } // TODO
 
 
 // This function is undefined in the pdf, assume replaces head of stack with n?
@@ -245,25 +246,30 @@ void query(lfcat *m, int lo, int hi, void (*trav)(int, void *), void *aux) {
 
 // Range query helper
 node *find_next_base_stack(stack<node *> *s) {
-    /*
-    node *base = pop(s);
-    node *t = top(s);
-    if (t == nullptr)
-        return nullptr;
+    node *base = s->top();
+    s->pop();
 
-    if (t->left.load() == base)
+    node *t = s->top();
+
+    if (t == nullptr) {
+        return nullptr;
+    }
+
+    if (t->left.load() == base) {
         return leftmost_and_stack(t->right.load(), s);
+    }
 
     int be_greater_than = t->key;
     while (t != nullptr) {
-        if (t->valid.load() && t->key > be_greater_than)
+        if (t->valid.load() && (t->key > be_greater_than)) {
             return leftmost_and_stack(t->right.load(), s);
+        }
         else {
-            pop(s);
-            t = top(s);
+            s->pop();
+            t = s->top();
         }
     }
-    */
+
     return nullptr;
 }
 
