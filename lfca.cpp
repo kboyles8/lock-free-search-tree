@@ -143,11 +143,10 @@ bool try_replace(lfcat *m, node *b, node *new_b);
 void complete_join(lfcat *t, node *m);
 node *find_base_stack(node *n, int i, stack<node *> *s);
 node *parent_of(lfcat *t, node *n);
-
-void low_contention_adaptation(lfcat *t, node *b) { }  // TODO
-void high_contention_adaptation(lfcat *m, node *b) { }  // TODO
-node* find_base_node(node* n, int i) { } // TODO
-node* leftmost_and_stack(node* n, stack<node *> *s) { } // TODO
+void low_contention_adaptation(lfcat *t, node *b);
+void high_contention_adaptation(lfcat *m, node *b);
+node *find_base_node(node *n, int i);
+node *leftmost_and_stack(node *n, stack<node *> *s);
 
 // Undefined functions that need implementations:
 
