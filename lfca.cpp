@@ -142,6 +142,7 @@ treap *all_in_range(lfcat *t, int lo, int hi, rs *help_s);
 bool try_replace(lfcat *m, node *b, node *new_b);
 void complete_join(lfcat *t, node *m);
 node *find_base_stack(node *n, int i, stack<node *> *s);
+node *parent_of(lfcat *t, node *n);
 
 void low_contention_adaptation(lfcat *t, node *b) { }  // TODO
 void high_contention_adaptation(lfcat *m, node *b) { }  // TODO
@@ -162,12 +163,6 @@ void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
 // Assuming this finds the leftmost node for a given node (follow left pointer until the end)
 node *leftmost(node *n) {
     return nullptr;  // TODO
-}
-
-// Assuming this finds the parent of a given node. The tree might be needed to make sure the node is still reachable from the root.
-// Returns NOT_FOUND on failure
-node *parent_of(lfcat *t, node *n) {
-    return nullptr; // TODO
 }
 
 // This needs to be a symmetric version of `secure_join_left`. Try to see if it is possible to combine the two functions and switch type based on a parameter to reduce duplicate code.
@@ -640,21 +635,24 @@ node *leftmost_and_stack(node *n, stack<node *> *s) {
     return n;
 }
 
-/*
-319 node* parent_of(lfcatree* t, node* n){
-320 node* prev_node = NULL;
-321 node* curr_node = aload(&t->root);
-322 while(curr_node != n && curr_node ->type == route){
-323 prev_node = curr_node;
-324 if(n->key < curr_node ->key){
-325 curr_node = aload(&curr_node ->left);
-326 }else {
-327 curr_node = aload(&curr_node ->right);
-328 }
-329 }
-330 if(curr_node ->type != route){
-331 return NOT_FOUND;
-332 }
-333 return prev_node;
-334 }
-*/
+node *parent_of(lfcat *t, node *n) {
+    node *prev_node = NULL;
+    node *curr_node = t->root.load();
+
+    while (curr_node != n && curr_node->type == route) {
+        prev_node = curr_node;
+        if (n->key < curr_node->key) {
+            curr_node = curr_node->left.load();
+        }
+        else {
+            curr_node = curr_node->right.load();
+        }
+    }
+
+    // TODO: This doesn't make sense, and restricts the function to only finding route nodes. It should check if `curr_node` is not `n`.
+    if (curr_node->type != route) {
+        return NOT_FOUND;
+    }
+
+    return prev_node;
+}
