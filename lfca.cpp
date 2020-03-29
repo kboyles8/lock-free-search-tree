@@ -262,6 +262,13 @@ bool LfcaTree::do_update(Treap *(*u)(Treap *, int, bool *), int i) {
 
     while (true) {
         node *base = find_base_node(root.load(), i);
+
+        // If the treap is full, try to split the node and retry the insert
+        if (base->data->getSize() >= TREAP_NODES) {
+            high_contention_adaptation(base);
+            continue;
+        }
+
         if (is_replaceable(base)) {
             bool res;
 
