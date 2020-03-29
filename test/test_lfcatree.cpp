@@ -103,6 +103,12 @@ static void insertThread(LfcaTree *tree, int start, int end, int delta) {
     }
 }
 
+static void removeThread(LfcaTree *tree, int start, int end, int delta) {
+    for (int i = start; i <= end; i += delta) {
+        tree->remove(i);
+    }
+}
+
 // A very poor, nondeterministic unit test for crude concurrency. Included just for some sanity, but should not be relied on.
 TEST_F(LfcaTreeTest, ParallelInsert) {
     vector<thread> threads;
@@ -116,6 +122,62 @@ TEST_F(LfcaTreeTest, ParallelInsert) {
     }
 
     for (int i = 0; i <= PARALLEL_END; i++) {
+        ASSERT_TRUE(lfcaTree.lookup(i));
+    }
+}
+
+
+TEST_F(LfcaTreeTest, ParallelRemove) {
+    // Insert all elements
+    for (int i = PARALLEL_START; i <= PARALLEL_END; i++) {
+        lfcaTree.insert(i);
+    }
+
+    vector<thread> threads;
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.push_back(thread(removeThread, &lfcaTree, PARALLEL_START + i, PARALLEL_END, NUM_THREADS));
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.at(i).join();
+    }
+
+    for (int i = 0; i <= PARALLEL_END; i++) {
+        ASSERT_FALSE(lfcaTree.lookup(i));
+    }
+}
+
+TEST_F(LfcaTreeTest, ParallelRemovePartial) {
+    // Insert all elements
+    for (int i = PARALLEL_START; i <= PARALLEL_END; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Only remove the middle 50% of the values from the tree
+    int oneQuarterOfRange = (PARALLEL_END - PARALLEL_START) / 4;
+    int removeStart = PARALLEL_START + oneQuarterOfRange;
+    int removeEnd = PARALLEL_END - oneQuarterOfRange;
+
+    vector<thread> threads;
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.push_back(thread(removeThread, &lfcaTree, removeStart + i, removeEnd, NUM_THREADS));
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.at(i).join();
+    }
+
+    for (int i = 0; i < removeStart; i++) {
+        ASSERT_TRUE(lfcaTree.lookup(i));
+    }
+
+    for (int i = removeStart; i <= removeEnd; i++) {
+        ASSERT_FALSE(lfcaTree.lookup(i));
+    }
+
+    for (int i = removeEnd + 1; i <= PARALLEL_END; i++) {
         ASSERT_TRUE(lfcaTree.lookup(i));
     }
 }
