@@ -314,6 +314,10 @@ node *find_next_base_stack(stack<node *> *s) {
     node *base = s->top();
     s->pop();
 
+    if (s->empty()) {
+        return nullptr;
+    }
+    
     node *t = s->top();
 
     if (t == nullptr) {
