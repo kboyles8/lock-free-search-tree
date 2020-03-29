@@ -332,12 +332,18 @@ node *find_next_base_stack(stack<node *> *s) {
     }
 
     int be_greater_than = t->key;
-    while (t != nullptr) {
+    while (true) {
         if (t->valid.load() && (t->key > be_greater_than)) {
             return leftmost_and_stack(t->right.load(), s);
         }
         else {
             s->pop();
+
+            // Stop looping if the stack is empty
+            if (s->empty()) {
+                break;
+            }
+
             t = s->top();
         }
     }
