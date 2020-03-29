@@ -27,6 +27,7 @@ using namespace std;
 #define PREPARING (node *)0       // Used for join
 #define DONE (node *)1            // ...
 #define ABORTED (node *)2         // ...
+const int TreapSplitThreshold = 64;
 enum contention_info {
     contended,
     uncontened,
@@ -249,7 +250,7 @@ void LfcaTree::adapt_if_needed(node *b) {
     if (!is_replaceable(b)) {
         return;
     }
-    else if (new_stat(b, noinfo) > HIGH_CONT) {
+    else if (new_stat(b, noinfo) > HIGH_CONT || (b->type == normal && b->data->getSize() >= TreapSplitThreshold) ) {
         high_contention_adaptation(b);
     }
     else if (new_stat(b, noinfo) < LOW_CONT) {
@@ -335,6 +336,9 @@ node *find_next_base_stack(stack<node *> *s) {
         }
         else {
             s->pop();
+            if (s->empty()) {
+                return nullptr;
+            }
             t = s->top();
         }
     }
