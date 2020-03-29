@@ -26,7 +26,7 @@ private:
     void help_if_needed(node *n);
 
 public:
-    LfcaTree() { };
+    LfcaTree();
 
     bool insert(int val);
     bool remove(int val);

@@ -288,6 +288,14 @@ bool LfcaTree::do_update(Treap *(*u)(Treap *, int, bool *), int i) {
 }
 
 // Public interface
+LfcaTree::LfcaTree() {
+    // Create root node
+    node *rootNode = new node();
+    rootNode->type = normal;
+    rootNode->data =  new Treap();
+    root.store(rootNode);
+}
+
 bool LfcaTree::insert(int i) {
     return do_update(treap_insert, i);
 }
