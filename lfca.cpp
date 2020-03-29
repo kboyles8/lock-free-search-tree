@@ -632,7 +632,7 @@ void LfcaTree::high_contention_adaptation(node *b) {
 // Auxilary functions
 node *find_base_node(node *n, int i) {
     while (n->type == route) {
-        if (i < n->key) {
+        if (i <= n->key) {
             n = n->left.load();
         }
         else {
