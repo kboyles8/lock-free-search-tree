@@ -317,12 +317,8 @@ node *find_next_base_stack(stack<node *> *s) {
     if (s->empty()) {
         return nullptr;
     }
-    
-    node *t = s->top();
 
-    if (t == nullptr) {
-        return nullptr;
-    }
+    node *t = s->top();
 
     if (t->left.load() == base) {
         return leftmost_and_stack(t->right.load(), s);
