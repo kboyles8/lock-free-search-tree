@@ -5,9 +5,9 @@
 #include "../treap.h"
 #include "../lfca.h"
 
-#define NUM_THREADS 4
+#define NUM_THREADS 8
 #define PARALLEL_START 0
-#define PARALLEL_END 10000
+#define PARALLEL_END 100000
 
 class LfcaTreeTest : public ::testing::Test {
 protected:
