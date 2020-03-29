@@ -156,11 +156,6 @@ void replace_top(stack<node *> *s, node *n) {
     return;
 }
 
-void copy_state_to(stack<node *> *s, stack<node *> *backup_s) {
-    *s = *backup_s;  // I'm assuming parameter 1 is the one being written to
-    return;
-}
-
 // Assuming this finds the leftmost node for a given node (follow left pointer until the end)
 node *leftmost(node *n) {
     node *temp = n;
@@ -392,7 +387,7 @@ find_first:
 
     while (true) {  // Find remaining base nodes
         done->push_back(b);
-        copy_state_to(s, backup_s);
+        *backup_s = *s;  // Backup the result set
         // TODO: replace with our treap functions
         /*
         if (!empty(b->data) && max(b->data) >= hi) {
@@ -419,13 +414,13 @@ find_first:
                 continue;
             }
             else {
-                copy_state_to(backup_s, s);
+                *s = *backup_s;  // Restore the result set from backup
                 goto find_next_base_node;
             }
         }
         else {
             help_if_needed(b);
-            copy_state_to(backup_s, s);
+            *s = *backup_s;  // Restore the result set from backup
             goto find_next_base_node;
         }
     }
