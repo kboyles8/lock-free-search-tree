@@ -61,7 +61,7 @@ public:
     Treap() { };
 
     Treap *immutableInsert(int val);
-    Treap *immutableRemove(int val);
+    Treap *immutableRemove(int val, bool *success);
 
     bool contains(int val);
 

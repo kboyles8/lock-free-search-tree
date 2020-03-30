@@ -142,8 +142,7 @@ Treap *treap_insert(Treap *treap, int val, bool *result) {
 }
 
 Treap *treap_remove(Treap *treap, int val, bool *result) {
-    Treap *newTreap = treap->immutableRemove(val);
-    *result = true;  // TODO: Treaps do not currently report success/failure
+    Treap *newTreap = treap->immutableRemove(val, result);
     return newTreap;
 }
 

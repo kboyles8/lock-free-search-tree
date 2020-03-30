@@ -501,16 +501,19 @@ Treap *Treap::immutableInsert(int val) {
  * 
  * @param val
  * The value to remove
- * 
+ *
+ * @param success
+ * The location to store whether the remove was a success
+ *
  * @return Treap*
  * A pointer to a copy of the treap with the value removed
  */
-Treap *Treap::immutableRemove(int val) {
+Treap *Treap::immutableRemove(int val, bool *success) {
     // Copy the current object
     Treap *newTreap = new Treap(*this);
 
     // Remove the value from the copy
-    newTreap->remove(val);
+    *success = newTreap->remove(val);
 
     return newTreap;
 }
