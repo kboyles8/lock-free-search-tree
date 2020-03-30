@@ -8,6 +8,8 @@
  * C utilities used in the original implementation, such as stack, now use C++ standard library variants
  * Range query results are stored in vectors instead of treaps
  * Our custom immutable treaps are used in place of the original
+ * High contention adaptations (splits) are forced when a treap has reached the maximum size due to our fixed-size treaps
+ * Search order has been modified so that the left child can contain all values less than *or equal to* the route node's value, as opposed to strictly less than.
  */
 
 #include "lfca.h"
