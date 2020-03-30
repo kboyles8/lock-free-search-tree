@@ -1,8 +1,9 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <thread>
 
-#include "searchtree.h"
+#include "lfca.h"
 
 #define NUM_THREADS 4
 #define NUM_OPS 40000
@@ -70,7 +71,7 @@ struct RandomOpVals {
     }
 };
 
-static void mixedThread(SearchTree *tree, int numOps, RandomOpVals *randomOpVals) {
+static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) {
     int op;
     for (int i = 0; i < numOps; i++) {
         op = randomOpVals->randomOps.at(i);
@@ -97,7 +98,7 @@ static void mixedThread(SearchTree *tree, int numOps, RandomOpVals *randomOpVals
 
 int main(void) {
     vector<thread> threads;
-    SearchTree searchtree;
+    LfcaTree lfcaTree;
 
     int opsPerThread = NUM_OPS / NUM_THREADS;
 
@@ -114,7 +115,7 @@ int main(void) {
     high_resolution_clock::time_point start = high_resolution_clock::now();
 
     for (int i = 0; i < NUM_THREADS; i++) {
-        threads.push_back(thread(mixedThread, &searchtree, opsPerThread, &threadRandomOpVals.at(i)));
+        threads.push_back(thread(mixedThread, &lfcaTree, opsPerThread, &threadRandomOpVals.at(i)));
     }
 
     for (int i = 0; i < NUM_THREADS; i++) {
