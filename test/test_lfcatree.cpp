@@ -86,7 +86,7 @@ TEST_F(LfcaTreeTest, RangeQueryBulkTest) {
     for (int i = 0; i < 1024; i++) {
         lfcaTree.insert(i);
     }
-    
+
     vector<int> expectedQuery = {};
     vector<int> actualQuery;
     for (int i = 100; i < 1024; i++) {
@@ -94,6 +94,137 @@ TEST_F(LfcaTreeTest, RangeQueryBulkTest) {
         actualQuery = lfcaTree.rangeQuery(100, i);
         sort(actualQuery.begin(), actualQuery.end());
         ASSERT_EQ(expectedQuery, actualQuery);
+    }
+}
+
+TEST_F(LfcaTreeTest, LowContentionMergeFailure) {
+    // Fill up the base node
+    for (int i = 0; i < TREAP_NODES; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Add a quarter of the nodes for each treap to the left and right side of the split base node
+    int oneQuarterOfRange = TREAP_NODES / 4;
+    for (int i = -1; i > -oneQuarterOfRange; i--) {
+        lfcaTree.insert(i);
+    }
+    for (int i = TREAP_NODES; i < TREAP_NODES + oneQuarterOfRange; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Attempt to force a low contention merge due to a large number of operations on the left base node without conflict
+    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int testVal = 0;
+    for (int i = 0; i < uncontendedOpsNeeded; i++) {
+        lfcaTree.remove(testVal);
+        lfcaTree.insert(testVal);
+    }
+
+    // Attempt to force a low contention merge due to a large number of operations on the right base node without conflict
+    testVal = TREAP_NODES - 1;
+    for (int i = 0; i < uncontendedOpsNeeded; i++) {
+        lfcaTree.remove(testVal);
+        lfcaTree.insert(testVal);
+    }
+
+    // No exception should be thrown
+}
+
+TEST_F(LfcaTreeTest, LowContentionMergeLeft) {
+    // Fill up the base node
+    for (int i = 0; i < TREAP_NODES; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Attempt to force a low contention merge due to a large number of operations on the left base node without conflict
+    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int testVal = 0;
+    for (int i = 0; i < uncontendedOpsNeeded; i++) {
+        lfcaTree.remove(testVal);
+        lfcaTree.insert(testVal);
+    }
+
+    // No exception should be thrown
+
+    // Make sure all values can be found after the merge
+    for (int i = 0; i < TREAP_NODES; i++) {
+        ASSERT_TRUE(lfcaTree.lookup(i));
+    }
+}
+
+TEST_F(LfcaTreeTest, LowContentionMergeRight) {
+    // Fill up the base node
+    for (int i = 0; i < TREAP_NODES; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Attempt to force a low contention merge due to a large number of operations on the right base node without conflict
+    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int testVal = TREAP_NODES - 1;
+    for (int i = 0; i < uncontendedOpsNeeded; i++) {
+        lfcaTree.remove(testVal);
+        lfcaTree.insert(testVal);
+    }
+
+    // No exception should be thrown
+
+    // Make sure all values can be found after the merge
+    for (int i = 0; i < TREAP_NODES; i++) {
+        ASSERT_TRUE(lfcaTree.lookup(i));
+    }
+}
+
+TEST_F(LfcaTreeTest, LowContentionMergeLeftWithRightRoute) {
+    // Fill up the base node
+    for (int i = 0; i < TREAP_NODES; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Split the right base node again by filling it up with more than it can hold
+    for (int i = TREAP_NODES; i < TREAP_NODES * 2; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Attempt to force a low contention merge due to a large number of operations on the left base node without conflict
+    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int testVal = 0;
+    for (int i = 0; i < uncontendedOpsNeeded; i++) {
+        lfcaTree.remove(testVal);
+        lfcaTree.insert(testVal);
+    }
+
+    // No exception should be thrown
+
+    // Make sure all values can be found after the merge
+    for (int i = 0; i < TREAP_NODES * 2; i++) {
+        ASSERT_TRUE(lfcaTree.lookup(i));
+    }
+}
+
+TEST_F(LfcaTreeTest, LowContentionMergeRightWithLeftRoute) {
+    // Fill up the base node
+    for (int i = 0; i < TREAP_NODES; i++) {
+        lfcaTree.insert(i);
+    }
+
+    // Split the left base node again by filling it up with more than it can hold
+    for (int i = -1; i > -TREAP_NODES; i--) {
+        lfcaTree.insert(i);
+    }
+
+    // Attempt to force a low contention merge due to a large number of operations on the right base node without conflict
+    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int testVal = TREAP_NODES - 1;
+    for (int i = 0; i < uncontendedOpsNeeded; i++) {
+        lfcaTree.remove(testVal);
+        lfcaTree.insert(testVal);
+    }
+
+    // No exception should be thrown
+
+    // Make sure all values can be found after the merge
+    for (int i = -TREAP_NODES + 1; i < TREAP_NODES; i++) {
+        ASSERT_TRUE(lfcaTree.lookup(i));
     }
 }
 
