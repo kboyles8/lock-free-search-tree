@@ -30,9 +30,9 @@ enum contention_info {
 
 // Data Structures
 struct route_node {
-    int key;                          // Split key
-    atomic<node *> left;              // < key
-    atomic<node *> right;             // >= key
+    int key{0};                          // Split key
+    atomic<node *> left{nullptr};              // < key
+    atomic<node *> right{nullptr};             // >= key
     atomic<bool> valid{true};         // Used for join
     atomic<node *> join_id{nullptr};  // ...
 
@@ -60,10 +60,10 @@ struct normal_base {
 };
 
 struct join_main : virtual normal_base {
-    node *neigh1;                      // First (not joined) neighbor base
+    node *neigh1 = nullptr;                      // First (not joined) neighbor base
     atomic<node *> neigh2{PREPARING};  // Joined n... (neighbor?)
-    node *gparent;                     // Grand parent
-    node *otherb;                      // Other branch
+    node *gparent = nullptr;                     // Grand parent
+    node *otherb= nullptr;                      // Other branch
 
     join_main() : normal_base() { }
     join_main(const join_main &other) : normal_base(other) {
@@ -75,7 +75,7 @@ struct join_main : virtual normal_base {
 };
 
 struct join_neighbor : virtual normal_base {
-    node *main_node;  // The main node for the join
+    node *main_node = nullptr;  // The main node for the join
 
     join_neighbor() : normal_base() { }
     join_neighbor(const join_neighbor &other) : normal_base(other) {
@@ -95,9 +95,9 @@ struct rs {                                 // Result storage for range queries
 };
 
 struct range_base : virtual normal_base {
-    int lo;
-    int hi;  // Low and high key
-    rs *storage;
+    int lo = 0;
+    int hi = 0;  // Low and high key
+    rs *storage = nullptr;
 
     range_base() : normal_base() { }
     range_base(const range_base &other) : normal_base(other) {
