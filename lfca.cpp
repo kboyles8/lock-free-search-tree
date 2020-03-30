@@ -521,7 +521,15 @@ node *LfcaTree::secure_join(node *b, bool left) {
     newNeigh2->type = join_neighbor;
     newNeigh2->parent = joinedp;
     newNeigh2->main_node = m;
-    newNeigh2->data = Treap::merge(m->data, n1->data);  // TODO: Verify that all elements in m are less than those in n1
+
+    if (left) {
+        // The main node has smaller values
+        newNeigh2->data = Treap::merge(m->data, n1->data);
+    }
+    else {
+        // The main node has larger values
+        newNeigh2->data = Treap::merge(n1->data, m->data);
+    }
 
     expectedNode = PREPARING;
     if (m->neigh2.compare_exchange_strong(expectedNode, newNeigh2)) {
