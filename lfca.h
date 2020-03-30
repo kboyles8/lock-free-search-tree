@@ -6,6 +6,13 @@
 
 #include "treap.h"
 
+// Contention constants
+#define CONT_CONTRIB 250          // For adaptation
+#define LOW_CONT_CONTRIB 1        // ...
+#define RANGE_QUERY_CONTRIBUTION 100         // ...
+#define HIGH_CONTENTION_THRESHOLD 1000            // ...
+#define LOW_CONTENTION_THRESHOLD -1000            // ...
+
 // Forward declare node for use in structs
 struct node;
 struct rs;
