@@ -464,6 +464,11 @@ node *LfcaTree::secure_join(node *b, bool left) {
         return nullptr;
     }
 
+    // Make sure that the two treaps are small enough to be merged
+    if (b->data->getSize() + n0->data->getSize() > TREAP_NODES) {
+        return nullptr;
+    }
+
     node *m = new node(*b);  // Copy b
     m->type = join_main;
 
