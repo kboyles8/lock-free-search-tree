@@ -186,8 +186,8 @@ LfcaTree::LfcaTree() {
     root.store(rootNode);
 }
 
-bool LfcaTree::insert(int i) {
-    return do_update(treap_insert, i);
+void LfcaTree::insert(int i) {
+    do_update(treap_insert, i);
 }
 
 bool LfcaTree::remove(int i) {

@@ -130,7 +130,7 @@ private:
 public:
     LfcaTree();
 
-    bool insert(int val);
+    void insert(int val);
     bool remove(int val);
     bool lookup(int val);
     std::vector<int> rangeQuery(int low, int high);
