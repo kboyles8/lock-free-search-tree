@@ -85,6 +85,23 @@ public:
         // Return the element
         return &_preallocatedElements()[index];
     };
+
+    /**
+     * Retrieves a preallocated element, copying from the other element using the assignment operator.
+     * Note that this does *not* use the copy constructor.
+     *
+     * @param other
+     * The element to copy from.
+     *
+     * @return T*
+     * A preallocated element, copied from the other element.
+     */
+    static T *New(const T &other) {
+        T *newElement = New();
+        *newElement = other;
+
+        return newElement;
+    }
 };
 
 #endif /* _PREALLOCATABLE_H */
