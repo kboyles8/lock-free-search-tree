@@ -17,15 +17,16 @@ enum Operation {
     INSERT,
     REMOVE,
     LOOKUP,
-    RANGE_QUERY,
-
-    // Count the number of operations
-    OPS_COUNT
+    RANGE_QUERY
 };
 
 static mt19937 randEngine {(unsigned int)time(NULL)};
 static uniform_int_distribution<int> valDist {numeric_limits<int>::min(), numeric_limits<int>::max()};
-static uniform_int_distribution<int> opDist {0, OPS_COUNT-1};
+
+Operation getRandOp(discrete_distribution<int> opDist) {
+    int randNum = opDist(randEngine);
+    return (Operation)randNum;
+}
 
 struct RandomOpVals {
     vector<int> insertVals;
@@ -35,7 +36,7 @@ struct RandomOpVals {
     vector<int> rangeQueryMaxVals;
     vector<int> randomOps;
 
-    RandomOpVals(int numOps) {
+    RandomOpVals(int numOps, discrete_distribution<int> opDist) {
         // Pre-allocate space
         randomOps.reserve(numOps);
         insertVals.reserve(numOps);
@@ -111,8 +112,15 @@ int main(void) {
 
     vector<RandomOpVals> threadRandomOpVals;
 
+    // Create distribution of operations
+    double insertWeight = 0.25;
+    double removeWeight = 0.25;
+    double lookupWeight = 0.25;
+    double rangeQueryWeight = 0.25;
+    discrete_distribution<int> opDist {insertWeight, removeWeight, lookupWeight, rangeQueryWeight};
+
     for (int i = 0; i < NUM_THREADS; i++) {
-        threadRandomOpVals.push_back(RandomOpVals(opsPerThread));
+        threadRandomOpVals.push_back(RandomOpVals(opsPerThread, opDist));
     }
 
     cout << "Running " << NUM_OPS << " random operations total on " << NUM_THREADS << " threads, " << opsPerThread << " operations per thread." << endl;
