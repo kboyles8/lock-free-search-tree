@@ -1,6 +1,7 @@
 #include <iostream>
 #include <limits>
 #include <mrlock.h>
+#include <stack>
 
 #include "mrlocktree.h"
 
@@ -19,6 +20,30 @@ MrlockTree::MrlockTree() : mrlock(1) {
     // Set up the tree lock
     treeLock.Resize(1);
     treeLock.Set(1);
+}
+
+MrlockTree::~MrlockTree() {
+    if (head != NULL) {
+        // Recursively delete all nodes
+        stack<Node *> nodeStack;
+        nodeStack.push(head);
+
+        while (!nodeStack.empty()) {
+            Node *currentNode = nodeStack.top();
+            nodeStack.pop();
+
+            // Add this node's children, if they exist
+            if (currentNode->left != NULL) {
+                nodeStack.push(currentNode->left);
+            }
+            if (currentNode->right != NULL) {
+                nodeStack.push(currentNode->right);
+            }
+
+            // Delete this node
+            delete currentNode;
+        }
+    }
 }
 
 void MrlockTree::insert(int val) {

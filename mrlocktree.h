@@ -43,6 +43,7 @@ private:
 
 public:
     MrlockTree();
+    ~MrlockTree();
 
     void insert(int val);
     void remove(int val);
