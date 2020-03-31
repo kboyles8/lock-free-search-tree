@@ -252,14 +252,14 @@ node *new_range_base(node *b, int lo, int hi, rs *s) {
 }
 
 vector<int> *LfcaTree::all_in_range(int lo, int hi, rs *help_s) {
-    stack<node *> *s = new stack<node *>();
-    stack<node *> *backup_s = new stack<node *>();
-    vector<node *> *done = new vector<node *>();
+    stack<node *> s;
+    stack<node *> backup_s;
+    vector<node *> done;
     node *b;
     rs *my_s;
 
 find_first:
-    b = find_base_stack(root.load(), lo, s);
+    b = find_base_stack(root.load(), lo, &s);
     if (help_s != nullptr) {
         if (b->type != range || help_s != b->storage) {
             return help_s->result.load();
@@ -276,7 +276,7 @@ find_first:
             goto find_first;
         }
 
-        replace_top(s, n);
+        replace_top(&s, n);
     }
     else if (b->type == range && b->hi >= hi) {
         return all_in_range(b->lo, b->hi, b->storage);
@@ -287,8 +287,8 @@ find_first:
     }
 
     while (true) {  // Find remaining base nodes
-        done->push_back(b);
-        *backup_s = *s;  // Backup the result set
+        done.push_back(b);
+        backup_s = s;  // Backup the result set
 
         // Stop looping if this treap is the last treap to consider for the range query
 
@@ -301,7 +301,7 @@ find_first:
         }
 
     find_next_base_node:
-        b = find_next_base_stack(s);
+        b = find_next_base_stack(&s);
         if (b == nullptr) {
             break;
         }
@@ -315,30 +315,30 @@ find_first:
             node *n = new_range_base(b, lo, hi, my_s);
 
             if (try_replace(b, n)) {
-                replace_top(s, n);
+                replace_top(&s, n);
                 continue;
             }
             else {
-                *s = *backup_s;  // Restore the result set from backup
+                s = backup_s;  // Restore the result set from backup
                 goto find_next_base_node;
             }
         }
         else {
             help_if_needed(b);
-            *s = *backup_s;  // Restore the result set from backup
+            s = backup_s;  // Restore the result set from backup
             goto find_next_base_node;
         }
     }
 
     // stack_array[0] gets the item at the bottom of the stack. Replicate this with a vector
-    vector<int> *res = new vector<int>(done->front()->data->rangeQuery(lo, hi));  // done->stack_array[0]->data;
-    for (size_t i = 1; i < done->size(); i++) {
-        vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi);
+    vector<int> *res = new vector<int>(done.front()->data->rangeQuery(lo, hi));  // done->stack_array[0]->data;
+    for (size_t i = 1; i < done.size(); i++) {
+        vector<int> resTemp = done.at(i)->data->rangeQuery(lo, hi);
         res->insert(end(*res), begin(resTemp), end(resTemp));
     }
 
     vector<int> *expectedResult = NOT_SET;
-    if (my_s->result.compare_exchange_strong(expectedResult, res) && done->size() > 1) {
+    if (my_s->result.compare_exchange_strong(expectedResult, res) && done.size() > 1) {
         my_s->more_than_one_base.store(true);
     }
 
