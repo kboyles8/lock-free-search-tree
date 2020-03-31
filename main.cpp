@@ -9,8 +9,8 @@
 #define NUM_OPS 40000
 
 // These values are all estimates, due to the nondeterministic nature of the program
-#define MAX_TREAPS_NEEDED (2 * NUM_OPS)  // About 2 Treaps per operation
-#define MAX_NODES_NEEDED (32 * NUM_OPS)  // About 4 nodes per operation
+#define MAX_TREAPS_NEEDED (2 * NUM_OPS)
+#define MAX_NODES_NEEDED (32 * NUM_OPS)
 
 using namespace std;
 using namespace std::chrono;
