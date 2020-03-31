@@ -269,7 +269,7 @@ find_first:
         }
     }
     else if (is_replaceable(b)) {
-        my_s = new rs();
+        my_s = rs::New();
         node *n = new_range_base(b, lo, hi, my_s);
 
         if (!try_replace(b, n)) {

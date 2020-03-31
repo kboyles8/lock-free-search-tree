@@ -34,14 +34,15 @@ enum node_type {
 };
 
 // Data Structures
-struct rs {                                 // Result storage for range queries
+struct rs : public Preallocatable<rs> {                                 // Result storage for range queries
     atomic<vector<int> *> result{NOT_SET};  // The result
     atomic<bool> more_than_one_base{false};
 
-    rs() { }
-    rs(const rs &other) {
+    rs *operator=(const rs &other) {
         result.store(other.result.load());
         more_than_one_base.store(other.more_than_one_base.load());
+
+        return this;
     }
 };
 
