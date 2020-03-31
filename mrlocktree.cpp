@@ -38,23 +38,17 @@ void MrlockTree::insert(int val) {
     }
 
     // Insert the value
-    Treap * expected = temp->treap.load();
-    Treap * desired = temp->treap.load()->immutableInsert(val);
-    while (!atomic_compare_exchange_weak(&temp->treap, &expected, desired)) {
-        desired = temp->treap.load()->immutableInsert(val);
-    }
+    temp->treap = temp->treap->immutableInsert(val);
 
     // If inserting causes the treap to become too large, split it in two
-    if (temp->treap.load()->getSize() >= TreapSplitThreshold) {
+    if (temp->treap->getSize() >= TreapSplitThreshold) {
         Node *left = new Node(Empty);
         left->isRoute = false;
 
         Node *right = new Node(Empty);
         right->isRoute = false;
-        Treap* lefttemp = left->treap.load();
-        Treap* righttemp = right->treap.load();
-        
-        int splitVal = temp->treap.load()->split(&lefttemp, &righttemp);
+
+        int splitVal = temp->treap->split(&left->treap, &right->treap);
 
         temp->val = splitVal;
         temp->isRoute = true;
@@ -86,18 +80,14 @@ void MrlockTree::remove(int val) {
     }
 
     // Perform the remove
-    Treap * expected = temp->treap.load();
-    Treap * desired = temp->treap.load()->immutableInsert(val);
-    while (!atomic_compare_exchange_weak(&temp->treap, &expected, desired)) {
-        desired = temp->treap.load()->immutableInsert(val);
-    }
+    temp->treap = temp->treap->immutableRemove(val);
 
     // Check if a merge is possible. This is when the node has a parent, and the node's sibling is also a base node
     bool mergeIsPossible = tempParent != nullptr && !tempParent->left->isRoute && !tempParent->right->isRoute;
 
     if (mergeIsPossible) {
         // Check if the two nodes are small enough to be merged
-        int combinedSize = tempParent->left->treap.load()->getSize() + tempParent->right->treap.load()->getSize();
+        int combinedSize = tempParent->left->treap->getSize() + tempParent->right->treap->getSize();
         if (combinedSize <= TreapMergeThreshold) {
             tempParent->treap = Treap::merge(tempParent->left->treap, tempParent->right->treap);
             tempParent->isRoute = false;
@@ -129,7 +119,7 @@ bool MrlockTree::lookup(int val) {
         }
     }
 
-    return temp->treap.load()->contains(val);
+    return temp->treap->contains(val);
 }
 
 vector<int> MrlockTree::rangeQuery(int low, int high) {
@@ -146,7 +136,7 @@ vector<int> MrlockTree::rangeQuery(int low, int high) {
 
         // If popped node is base node, perform range query on treap and add it to result.
         if (!temp->isRoute) {
-            vector<int> values = temp->treap.load()->rangeQuery(low, high);
+            vector<int> values = temp->treap->rangeQuery(low, high);
             result.insert(result.end(), values.begin(), values.end());
             continue;
         }
