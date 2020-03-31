@@ -37,6 +37,12 @@ private:
     }
 
 public:
+    /**
+     * Preallocates elements for this class.
+     *
+     * @param numElements
+     * The number of elements to preallocate.
+     */
     static void Preallocate(int numElements) {
         if (_isPreallocated()) {
             throw std::logic_error(std::string("Cannot preallocate: Class ") + typeid(T).name() + " is already preallocated.");
@@ -48,11 +54,20 @@ public:
         _currentElementIndex().store(0);
     };
 
+    /**
+     * Deallocates all preallocated elements.
+     */
     static void Deallocate() {
         delete[] _preallocatedElements();
         _isPreallocated() = false;
     };
 
+    /**
+     * Retrieves a preallocated element.
+     *
+     * @return T*
+     * The preallocated element.
+     */
     static T *New() {
         if (!_isPreallocated()) {
             // TODO: If no elements have been preallocated, this could act like a standard `new` operator and create an element.
