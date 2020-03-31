@@ -5,8 +5,8 @@
 
 #include "lfca.h"
 
-#define NUM_THREADS 4
-#define NUM_OPS 40000
+#define MAX_THREADS 32
+#define NUM_OPS 200000
 
 // These values are all estimates, due to the nondeterministic nature of the program
 #define MAX_TREAPS_NEEDED (2 * NUM_OPS)
@@ -21,6 +21,20 @@ enum Operation {
     REMOVE,
     LOOKUP,
     RANGE_QUERY
+};
+
+struct OpWeights {
+    double insertWeight;
+    double removeWeight;
+    double lookupWeight;
+    double rangeQueryWeight;
+
+    OpWeights(double insertWeight, double removeWeight, double lookupWeight, double rangeQueryWeight) {
+        this->insertWeight = insertWeight;
+        this->removeWeight = removeWeight;
+        this->lookupWeight = lookupWeight;
+        this->rangeQueryWeight = rangeQueryWeight;
+    }
 };
 
 static mt19937 randEngine {(unsigned int)time(NULL)};
@@ -39,7 +53,10 @@ struct RandomOpVals {
     vector<int> rangeQueryMaxVals;
     vector<int> randomOps;
 
-    RandomOpVals(int numOps, discrete_distribution<int> opDist) {
+    RandomOpVals(int numOps, OpWeights weights) {
+        // Create distribution of operations
+        discrete_distribution<int> opDist {weights.insertWeight, weights.removeWeight, weights.lookupWeight, weights.rangeQueryWeight};
+
         // Pre-allocate space
         randomOps.reserve(numOps);
         insertVals.reserve(numOps);
@@ -103,40 +120,23 @@ static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) 
     }
 }
 
-int main(void) {
-    Treap::Preallocate(MAX_TREAPS_NEEDED);
-    node::Preallocate(MAX_NODES_NEEDED);
-    rs::Preallocate(MAX_RESULT_SETS_NEEDED);
-
+static double RunPerformanceTest(LfcaTree *tree, OpWeights weights, int numThreads) {
     vector<thread> threads;
-    LfcaTree lfcaTree;
 
-    int opsPerThread = NUM_OPS / NUM_THREADS;
-
-    cout << "Generating random values..." << endl;
+    int opsPerThread = NUM_OPS / numThreads;
 
     vector<RandomOpVals> threadRandomOpVals;
-
-    // Create distribution of operations
-    double insertWeight = 0.25;
-    double removeWeight = 0.25;
-    double lookupWeight = 0.25;
-    double rangeQueryWeight = 0.25;
-    discrete_distribution<int> opDist {insertWeight, removeWeight, lookupWeight, rangeQueryWeight};
-
-    for (int i = 0; i < NUM_THREADS; i++) {
-        threadRandomOpVals.push_back(RandomOpVals(opsPerThread, opDist));
+    for (int i = 0; i < numThreads; i++) {
+        threadRandomOpVals.push_back(RandomOpVals(opsPerThread, weights));
     }
-
-    cout << "Running " << NUM_OPS << " random operations total on " << NUM_THREADS << " threads, " << opsPerThread << " operations per thread." << endl;
 
     high_resolution_clock::time_point start = high_resolution_clock::now();
 
-    for (int i = 0; i < NUM_THREADS; i++) {
-        threads.push_back(thread(mixedThread, &lfcaTree, opsPerThread, &threadRandomOpVals.at(i)));
+    for (int i = 0; i < numThreads; i++) {
+        threads.push_back(thread(mixedThread, tree, opsPerThread, &threadRandomOpVals.at(i)));
     }
 
-    for (int i = 0; i < NUM_THREADS; i++) {
+    for (int i = 0; i < numThreads; i++) {
         threads.at(i).join();
     }
 
@@ -144,9 +144,46 @@ int main(void) {
     high_resolution_clock::time_point end = high_resolution_clock::now();
     duration<double, milli> elapsed = end - start;
 
-    cout << "Finished. (Took " << elapsed.count() << " ms)" << endl;
+    return elapsed.count();
+}
 
-    Treap::Deallocate();
-    node::Deallocate();
-    rs::Deallocate();
+int main(void) {
+    // Set up test weights
+    vector<OpWeights> opWeights;
+    opWeights.push_back(OpWeights(0.25, 0.25, 0.50, 0.00));  // w:50% r:50%
+    opWeights.push_back(OpWeights(0.10, 0.10, 0.80, 0.00));  // w:20% r:80%
+    opWeights.push_back(OpWeights(0.005, 0.005, 0.99, 0.00));  // w:1% r:99%
+
+    for (OpWeights weights : opWeights) {
+        double lfcaResults[MAX_THREADS];
+
+        cout << "Running " << NUM_OPS << " random operations total on 1 to " << MAX_THREADS << " threads. Weights: (insert: "
+            << weights.insertWeight << ", remove: " << weights.removeWeight << ", lookup: " << weights.lookupWeight << ", range query: " << weights.rangeQueryWeight << ")..." << endl;
+
+        for (int iThread = 1; iThread <= MAX_THREADS; iThread++) {
+            cout << "Running with " << iThread << " thread(s)...";
+
+            Treap::Preallocate(MAX_TREAPS_NEEDED);
+            node::Preallocate(MAX_NODES_NEEDED);
+            rs::Preallocate(MAX_RESULT_SETS_NEEDED);
+
+            LfcaTree lfcaTree;
+
+            lfcaResults[iThread-1] = RunPerformanceTest(&lfcaTree, weights, iThread);
+
+            Treap::Deallocate();
+            node::Deallocate();
+            rs::Deallocate();
+
+            cout << "\r";
+        }
+
+        cout << endl;
+        cout << "Results (in ms):" << endl;
+        cout << "LFCA, ";
+        for (int iThread = 0; iThread < MAX_THREADS; iThread++) {
+            cout << to_string(lfcaResults[iThread]) << (iThread < MAX_THREADS - 1 ? ", " : "");
+        }
+        cout << endl << endl;
+    }
 }
