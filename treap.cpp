@@ -490,8 +490,7 @@ int Treap::getMedianVal() {
  */
 Treap *Treap::immutableInsert(int val) {
     // Copy the current object
-    Treap *newTreap = Treap::New();
-    *newTreap = *this;
+    Treap *newTreap = Treap::New(*this);
 
     // Insert the value in the copy
     newTreap->insert(val);
@@ -513,8 +512,7 @@ Treap *Treap::immutableInsert(int val) {
  */
 Treap *Treap::immutableRemove(int val, bool *success) {
     // Copy the current object
-    Treap *newTreap = Treap::New();
-    *newTreap = *this;
+    Treap *newTreap = Treap::New(*this);
 
     // Remove the value from the copy
     *success = newTreap->remove(val);
