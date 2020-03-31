@@ -132,7 +132,7 @@ TEST_F(LfcaTreeTest, LowContentionMergeFailure) {
     }
 
     // Attempt to force a low contention merge due to a large number of operations on the left base node without conflict
-    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int uncontendedOpsNeeded = abs(LOW_CONT / LOW_CONT_CONTRIB);
     int testVal = 0;
     for (int i = 0; i < uncontendedOpsNeeded; i++) {
         lfcaTree->remove(testVal);
@@ -156,7 +156,7 @@ TEST_F(LfcaTreeTest, LowContentionMergeLeft) {
     }
 
     // Attempt to force a low contention merge due to a large number of operations on the left base node without conflict
-    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int uncontendedOpsNeeded = abs(LOW_CONT / LOW_CONT_CONTRIB);
     int testVal = 0;
     for (int i = 0; i < uncontendedOpsNeeded; i++) {
         lfcaTree->remove(testVal);
@@ -178,7 +178,7 @@ TEST_F(LfcaTreeTest, LowContentionMergeRight) {
     }
 
     // Attempt to force a low contention merge due to a large number of operations on the right base node without conflict
-    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int uncontendedOpsNeeded = abs(LOW_CONT / LOW_CONT_CONTRIB);
     int testVal = TREAP_NODES - 1;
     for (int i = 0; i < uncontendedOpsNeeded; i++) {
         lfcaTree->remove(testVal);
@@ -205,7 +205,7 @@ TEST_F(LfcaTreeTest, LowContentionMergeLeftWithRightRoute) {
     }
 
     // Attempt to force a low contention merge due to a large number of operations on the left base node without conflict
-    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int uncontendedOpsNeeded = abs(LOW_CONT / LOW_CONT_CONTRIB);
     int testVal = 0;
     for (int i = 0; i < uncontendedOpsNeeded; i++) {
         lfcaTree->remove(testVal);
@@ -232,7 +232,7 @@ TEST_F(LfcaTreeTest, LowContentionMergeRightWithLeftRoute) {
     }
 
     // Attempt to force a low contention merge due to a large number of operations on the right base node without conflict
-    int uncontendedOpsNeeded = abs(LOW_CONTENTION_THRESHOLD / LOW_CONT_CONTRIB);
+    int uncontendedOpsNeeded = abs(LOW_CONT / LOW_CONT_CONTRIB);
     int testVal = TREAP_NODES - 1;
     for (int i = 0; i < uncontendedOpsNeeded; i++) {
         lfcaTree->remove(testVal);
