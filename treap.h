@@ -66,6 +66,7 @@ public:
     vector<int> rangeQuery(int min, int max);
 
     int getSize();
+    int getMaxValue();
 
     static Treap *merge(Treap *left, Treap *right);
     int split(Treap **left, Treap **right);

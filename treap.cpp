@@ -600,6 +600,26 @@ int Treap::getSize() {
 }
 
 /**
+ * Get the maximum value stored in this treap
+ *
+ * @return int
+ * The maximum value in the treap
+ */
+int Treap::getMaxValue() {
+    if (size == 0) {
+        throw logic_error("Cannot get the maximum value of an empty treap");
+    }
+
+    // Find the rightmost node
+    TreapIndex tempIndex = root;
+    while (nodes[tempIndex].right != NullNode) {
+        tempIndex = nodes[tempIndex].right;
+    }
+
+    return nodes[tempIndex].val;
+}
+
+/**
  * Merges two treaps into a new treap
  * 
  * @param left

@@ -397,12 +397,16 @@ find_first:
     while (true) {  // Find remaining base nodes
         done->push_back(b);
         *backup_s = *s;  // Backup the result set
-        // TODO: replace with our treap functions
-        /*
-        if (!empty(b->data) && max(b->data) >= hi) {
-           break;
+
+        // Stop looping if this treap is the last treap to consider for the range query
+
+        int maxVal = -1234;
+        if (!(b->data->getSize() == 0)) {
+            maxVal = b->data->getMaxValue();
+            if (maxVal >= hi) {
+                break;
+            }
         }
-        */
 
     find_next_base_node:
         b = find_next_base_stack(s);
@@ -434,11 +438,10 @@ find_first:
         }
     }
 
-    // TODO: replace with our treap functions
-    // TODO: `stack_array` likely refers to the internal array that was used to store the struct. This is either the top of the stack, or the bottom, depending on how it was implemented. Verify this and replicate the logic.
+    // stack_array[0] gets the item at the bottom of the stack. Replicate this with a vector
     vector<int> *res = new vector<int>(done->front()->data->rangeQuery(lo, hi));  // done->stack_array[0]->data;
     for (size_t i = 1; i < done->size(); i++) {
-        vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi);  // res = treap_join(res, done->stack_array[i]->data);
+        vector<int> resTemp = done->at(i)->data->rangeQuery(lo, hi);
         res->insert(end(*res), begin(resTemp), end(resTemp));
     }
 
@@ -447,8 +450,9 @@ find_first:
         my_s->more_than_one_base.store(true);
     }
 
-    // TODO: Figure out what is going on here. r() is likely a globally defined random function, picking a random array index.
+    // This call, which randomly adapts a base node from the range query, is ignored.
     // adapt_if_needed(t, done->array[r() % done->size]);
+
     return my_s->result.load();
 }
 
@@ -592,7 +596,6 @@ void LfcaTree::low_contention_adaptation(node *b) {
         }
     }
     else if (b->parent->right.load() == b) {
-        // TODO: Verify that this "symmetric case" is correct
         node *m = secure_join(b, false);
         if (m != nullptr) {
             complete_join(m);
@@ -653,8 +656,10 @@ node *find_base_node(node *n, int i) {
 }
 
 node *find_base_stack(node *n, int i, stack<node *> *s) {
-    // TODO: determine what stack_reset does. (It may just empty the stack)
-    //  stack_reset(s);
+    // Empty the stack
+    while (s->size() > 0) {
+        s->pop();
+    }
 
     while (n->type == route) {
         s->push(n);
@@ -682,7 +687,7 @@ node *leftmost_and_stack(node *n, stack<node *> *s) {
 }
 
 node *LfcaTree::parent_of(node *n) {
-    node *prev_node = NULL;
+    node *prev_node = nullptr;
     node *curr_node = root.load();
 
     while (curr_node != n && curr_node->type == route) {
@@ -695,7 +700,7 @@ node *LfcaTree::parent_of(node *n) {
         }
     }
 
-    // TODO: This doesn't make sense, and restricts the function to only finding route nodes. It should check if `curr_node` is not `n`.
+    // This is copied from the LFCA article. This restricts the function to only finding only the parent of route nodes. It could check if `curr_node` is not `n` instead.
     if (curr_node->type != route) {
         return NOT_FOUND;
     }
