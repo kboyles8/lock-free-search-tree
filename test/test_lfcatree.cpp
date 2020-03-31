@@ -73,6 +73,12 @@ TEST_F(LfcaTreeTest, RangeQuery) {
     EXPECT_EQ(expectedQuery, actualQuery);
 }
 
+TEST_F(LfcaTreeTest, RangeQueryEmptyTree) {
+    vector<int> expectedQuery = { };
+    vector<int> actualQuery = lfcaTree->rangeQuery(0, 0);
+    EXPECT_EQ(expectedQuery, actualQuery);
+}
+
 TEST_F(LfcaTreeTest, SplitAndMergeBulkTest) {
     for (int i = 0; i < 1024; i++) {
         lfcaTree->insert(i);
