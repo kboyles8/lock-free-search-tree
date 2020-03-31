@@ -9,7 +9,9 @@
 #define PARALLEL_START 0
 #define PARALLEL_END 100000
 
-#define MAX_TREAPS_NEEDED (2 * 2 * (PARALLEL_END - PARALLEL_START))  // An estimate (due to the nondeterministic nature of the parallel tests). Estimates about as many treaps as needed for ParallelRemove, with 2 retries per operation.
+// These values are estimates, due to the nondeterministic nature of the parallel tests.
+#define MAX_TREAPS_NEEDED (2 * 2 * (PARALLEL_END - PARALLEL_START))  // insert and remove for ParallelRemove, with 2 retries per operation
+#define MAX_NODES_NEEDED (4 * (PARALLEL_END - PARALLEL_START))
 
 class LfcaTreeTest : public ::testing::Test {
 protected:
@@ -17,11 +19,13 @@ protected:
 
     void SetUp() override {
         Treap::Preallocate(MAX_TREAPS_NEEDED);
+        node::Preallocate(MAX_NODES_NEEDED);
 
         lfcaTree = new LfcaTree();
     }
     void TearDown() override {
         Treap::Deallocate();
+        node::Deallocate();
 
         delete lfcaTree;
     }

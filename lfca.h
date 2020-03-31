@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "treap.h"
+#include "preallocatable.h"
 
 // Constants
 #define CONT_CONTRIB 250          // For adaptation
@@ -44,7 +45,7 @@ struct rs {                                 // Result storage for range queries
     }
 };
 
-struct node {
+struct node : public Preallocatable<node> {
     // route_node
     int key{0};                          // Split key
     atomic<node *> left{nullptr};              // < key
@@ -74,8 +75,7 @@ struct node {
     // node
     node_type type;
 
-    node() { }
-    node(const node &other) {
+    node *operator=(const node &other) {
         key = other.key;
         left.store(other.left.load());
         right.store(other.right.load());
@@ -98,6 +98,8 @@ struct node {
         storage = other.storage;  // TODO: should this be copied into a new object instead of linking to the same result storage?
 
         type = other.type;
+
+        return this;
     }
 };
 

@@ -160,7 +160,7 @@ bool LfcaTree::do_update(Treap *(*u)(Treap *, int, bool *), int i) {
         if (is_replaceable(base)) {
             bool res;
 
-            node *newb = new node();
+            node *newb = node::New();
             newb->type = normal;
             newb->parent = base->parent;
             newb->data = u(base->data, i, &res);
@@ -180,7 +180,7 @@ bool LfcaTree::do_update(Treap *(*u)(Treap *, int, bool *), int i) {
 // Public interface
 LfcaTree::LfcaTree() {
     // Create root node
-    node *rootNode = new node();
+    node *rootNode = node::New();
     rootNode->type = normal;
     rootNode->data =  Treap::New();
     root.store(rootNode);
@@ -241,7 +241,7 @@ node *find_next_base_stack(stack<node *> *s) {
 
 node *new_range_base(node *b, int lo, int hi, rs *s) {
     // Copy the other node
-    node *new_base = new node(*b);
+    node *new_base = node::New(*b);
 
     // Set fields
     new_base->lo = lo;
@@ -367,7 +367,7 @@ node *LfcaTree::secure_join(node *b, bool left) {
         return nullptr;
     }
 
-    node *m = new node(*b);  // Copy b
+    node *m = node::New(*b);  // Copy b
     m->type = join_main;
 
     node *expectedNode = b;
@@ -382,7 +382,7 @@ node *LfcaTree::secure_join(node *b, bool left) {
         }
     }
 
-    node *n1 = new node(*n0);  // Copy n0
+    node *n1 = node::New(*n0);  // Copy n0
     n1->type = join_neighbor;
     n1->main_node = m;
 
@@ -415,7 +415,7 @@ node *LfcaTree::secure_join(node *b, bool left) {
     m->neigh1 = n1;
 
     node *joinedp = m->otherb == n1 ? gparent : n1->parent;
-    node *newNeigh2 = new node(*n1);  // Copy n1
+    node *newNeigh2 = node::New(*n1);  // Copy n1
     newNeigh2->type = join_neighbor;
     newNeigh2->parent = joinedp;
     newNeigh2->main_node = m;
@@ -502,7 +502,7 @@ void LfcaTree::high_contention_adaptation(node *b) {
     }
 
     // Create new route node
-    node *r = new node();
+    node *r = node::New();
     r->type = route;
     r->valid = true;
 
@@ -512,14 +512,14 @@ void LfcaTree::high_contention_adaptation(node *b) {
     int splitVal = b->data->split(&leftTreap, &rightTreap);
 
     // Create left base node
-    node *leftNode = new node();
+    node *leftNode = node::New();
     leftNode->type = normal;
     leftNode->parent = r;
     leftNode->stat = 0;
     leftNode->data = leftTreap;
 
     // Create right base node
-    node *rightNode = new node();
+    node *rightNode = node::New();
     rightNode->type = normal;
     rightNode->parent = r;
     rightNode->stat = 0;

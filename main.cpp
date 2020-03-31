@@ -8,7 +8,9 @@
 #define NUM_THREADS 4
 #define NUM_OPS 40000
 
-#define MAX_TREAPS_NEEDED (2 * NUM_OPS)  // An estimate, about 2 Treaps per operation
+// These values are all estimates, due to the nondeterministic nature of the program
+#define MAX_TREAPS_NEEDED (2 * NUM_OPS)  // About 2 Treaps per operation
+#define MAX_NODES_NEEDED (32 * NUM_OPS)  // About 4 nodes per operation
 
 using namespace std;
 using namespace std::chrono;
@@ -102,6 +104,7 @@ static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) 
 
 int main(void) {
     Treap::Preallocate(MAX_TREAPS_NEEDED);
+    node::Preallocate(MAX_NODES_NEEDED);
 
     vector<thread> threads;
     LfcaTree lfcaTree;
@@ -142,4 +145,5 @@ int main(void) {
     cout << "Finished. (Took " << elapsed.count() << " ms)" << endl;
 
     Treap::Deallocate();
+    node::Deallocate();
 }
