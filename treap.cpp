@@ -15,17 +15,19 @@ static thread_local mt19937 randEngine{(unsigned int)time(NULL)};
 static uniform_int_distribution<int> weightDist{NegInfinity + 1, PosInfinity - 1};
 
 /**
- * Creates a new Treap as a copy of another treap
- * 
+ * Copies another Treap
+ *
  * @param other
  * The treap to copy
  */
-Treap::Treap(const Treap &other) {
+Treap *Treap::operator=(const Treap &other) {
     // Copy nodes from other to self
     copy(begin(other.nodes), end(other.nodes), begin(nodes));
 
     size = other.size;
     root = other.root;
+
+    return this;
 }
 
 /**
@@ -488,7 +490,8 @@ int Treap::getMedianVal() {
  */
 Treap *Treap::immutableInsert(int val) {
     // Copy the current object
-    Treap *newTreap = new Treap(*this);
+    Treap *newTreap = Treap::New();
+    *newTreap = *this;
 
     // Insert the value in the copy
     newTreap->insert(val);
@@ -510,7 +513,8 @@ Treap *Treap::immutableInsert(int val) {
  */
 Treap *Treap::immutableRemove(int val, bool *success) {
     // Copy the current object
-    Treap *newTreap = new Treap(*this);
+    Treap *newTreap = Treap::New();
+    *newTreap = *this;
 
     // Remove the value from the copy
     *success = newTreap->remove(val);
@@ -614,7 +618,7 @@ Treap *Treap::merge(Treap *left, Treap *right) {
         throw invalid_argument("Merging these treaps would overflow the new treap. (Sizes: " + to_string(left->size) + ", " + to_string(right->size) + ")");
     }
 
-    Treap *mergedTreap = new Treap();
+    Treap *mergedTreap = Treap::New();
 
     // If there are no elements in the Treaps, just return an empty Treap
     if (newSize == 0) {
@@ -688,8 +692,8 @@ int Treap::split(Treap **left, Treap **right) {
         throw logic_error("An empty treap cannot be split");
     }
 
-    *left = new Treap();
-    *right = new Treap();
+    *left = Treap::New();
+    *right = Treap::New();
     int splitVal = getMedianVal();
 
     // Copy the current treap so it can be modified (the current treap should not be changed)

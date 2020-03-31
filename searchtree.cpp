@@ -13,7 +13,7 @@ using namespace std;
 SearchTree::SearchTree() : mrlock(1) {
     // Set up the initial head as a base node
     head = new Node(Empty);
-    head->treap = new Treap();
+    head->treap = Treap::New();
     head->isRoute = false;
 
     // Set up the tree lock

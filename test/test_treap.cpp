@@ -2,6 +2,8 @@
 
 #include "../treap.h"
 
+#define MAX_TREAPS_NEEDED (TREAP_NODES * 2 + 1)  // FillingAndEmptying
+
 class TreapTest : public ::testing::Test {
 protected:
     Treap *treap {nullptr};
@@ -10,36 +12,22 @@ protected:
     Treap *merged {nullptr};
 
     void SetUp() override {
-        treap = new Treap();
+        Treap::Preallocate(MAX_TREAPS_NEEDED);
+
+        treap = Treap::New();
     }
     void TearDown() override {
-        // Free trees if allocated
-        if (treap != nullptr) {
-            delete(treap);
-        }
-        if (left != nullptr) {
-            delete(left);
-        }
-        if (right != nullptr) {
-            delete(right);
-        }
-        if (merged != nullptr) {
-            delete(merged);
-        }
+        Treap::Deallocate();
     }
 
     void insertHelper(int val) {
-        Treap *oldTreap = treap;
         treap = treap->immutableInsert(val);
-        free(oldTreap);
     }
 
     bool removeHelper(int val) {
         bool success;
 
-        Treap *oldTreap = treap;
         treap = treap->immutableRemove(val, &success);
-        free(oldTreap);
 
         return success;
     }
@@ -203,8 +191,8 @@ TEST_F(TreapTest, SplitEmpty) {
 }
 
 TEST_F(TreapTest, MergeFull) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());
@@ -234,8 +222,8 @@ TEST_F(TreapTest, MergeFull) {
 }
 
 TEST_F(TreapTest, MergeEmpty) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());
@@ -246,8 +234,8 @@ TEST_F(TreapTest, MergeEmpty) {
 }
 
 TEST_F(TreapTest, MergeLeftEmpty) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());
@@ -263,8 +251,8 @@ TEST_F(TreapTest, MergeLeftEmpty) {
 }
 
 TEST_F(TreapTest, MergeRightEmpty) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());

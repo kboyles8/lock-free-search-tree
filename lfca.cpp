@@ -290,7 +290,7 @@ LfcaTree::LfcaTree() {
     // Create root node
     node *rootNode = new node();
     rootNode->type = normal;
-    rootNode->data =  new Treap();
+    rootNode->data =  Treap::New();
     root.store(rootNode);
 }
 

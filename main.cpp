@@ -8,6 +8,8 @@
 #define NUM_THREADS 4
 #define NUM_OPS 40000
 
+#define MAX_TREAPS_NEEDED (2 * NUM_OPS)  // An estimate, about 2 Treaps per operation
+
 using namespace std;
 using namespace std::chrono;
 
@@ -71,6 +73,7 @@ struct RandomOpVals {
     }
 };
 
+// TODO: handle the possibility of running out of preallocated elements. At the very least, report this in a meaningful way, asking to re-run the program.
 static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) {
     int op;
     for (int i = 0; i < numOps; i++) {
@@ -97,6 +100,8 @@ static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) 
 }
 
 int main(void) {
+    Treap::Preallocate(MAX_TREAPS_NEEDED);
+
     vector<thread> threads;
     LfcaTree lfcaTree;
 
@@ -127,4 +132,6 @@ int main(void) {
     duration<double, milli> elapsed = end - start;
 
     cout << "Finished. (Took " << elapsed.count() << " ms)" << endl;
+
+    Treap::Deallocate();
 }
