@@ -10,7 +10,7 @@ const int TreapMergeThreshold = 32;
 
 using namespace std;
 
-SearchTree::SearchTree() : mrlock(1) {
+MrlockTree::MrlockTree() : mrlock(1) {
     // Set up the initial head as a base node
     head = new Node(Empty);
     head->treap = Treap::New();
@@ -21,7 +21,7 @@ SearchTree::SearchTree() : mrlock(1) {
     treeLock.Set(1);
 }
 
-void SearchTree::insert(int val) {
+void MrlockTree::insert(int val) {
     // Acquire the lock
     ScopedMrLock lock(&mrlock, treeLock);
 
@@ -66,7 +66,7 @@ void SearchTree::insert(int val) {
     }
 }
 
-void SearchTree::remove(int val) {
+void MrlockTree::remove(int val) {
     // Acquire the lock
     ScopedMrLock lock(&mrlock, treeLock);
 
@@ -113,7 +113,7 @@ void SearchTree::remove(int val) {
     }
 }
 
-bool SearchTree::lookup(int val) {
+bool MrlockTree::lookup(int val) {
     // Acquire the lock
     ScopedMrLock lock(&mrlock, treeLock);
 
@@ -132,7 +132,7 @@ bool SearchTree::lookup(int val) {
     return temp->treap.load()->contains(val);
 }
 
-vector<int> SearchTree::rangeQuery(int low, int high) {
+vector<int> MrlockTree::rangeQuery(int low, int high) {
     // Acquire the lock
     ScopedMrLock lock(&mrlock, treeLock);
 

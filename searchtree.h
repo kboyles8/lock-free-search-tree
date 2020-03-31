@@ -5,7 +5,7 @@
 #include <mrlock.h>
 #include "treap.h"
 
-class SearchTree {
+class MrlockTree {
 private:
     struct Node {
         bool isRoute {true};
@@ -42,7 +42,7 @@ private:
     Bitset treeLock;
 
 public:
-    SearchTree();
+    MrlockTree();
 
     void insert(int val);
     void remove(int val);
