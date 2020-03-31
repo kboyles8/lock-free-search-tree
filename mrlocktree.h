@@ -46,7 +46,7 @@ public:
     ~MrlockTree();
 
     void insert(int val);
-    void remove(int val);
+    bool remove(int val);
     bool lookup(int val);
     vector<int> rangeQuery(int low, int high);
 };

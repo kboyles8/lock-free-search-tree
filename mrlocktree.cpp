@@ -85,7 +85,7 @@ void MrlockTree::insert(int val) {
     }
 }
 
-void MrlockTree::remove(int val) {
+bool MrlockTree::remove(int val) {
     // Acquire the lock
     ScopedMrLock lock(&mrlock, treeLock);
 
@@ -105,7 +105,8 @@ void MrlockTree::remove(int val) {
     }
 
     // Perform the remove
-    temp->treap = temp->treap->immutableRemove(val);
+    bool success;
+    temp->treap = temp->treap->immutableRemove(val, &success);
 
     // Check if a merge is possible. This is when the node has a parent, and the node's sibling is also a base node
     bool mergeIsPossible = tempParent != nullptr && !tempParent->left->isRoute && !tempParent->right->isRoute;
@@ -126,6 +127,8 @@ void MrlockTree::remove(int val) {
             tempParent->right = nullptr;
         }
     }
+
+    return success;
 }
 
 bool MrlockTree::lookup(int val) {
