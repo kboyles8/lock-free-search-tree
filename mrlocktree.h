@@ -1,5 +1,5 @@
-#ifndef _SEARCHTREE_H
-#define _SEARCHTREE_H
+#ifndef _MRLOCKTREE_H
+#define _MRLOCKTREE_H
 
 #include <bitset.h>
 #include <mrlock.h>
@@ -50,4 +50,4 @@ public:
     vector<int> rangeQuery(int low, int high);
 };
 
-#endif /* _SEARCHTREE_H */
+#endif /* _MRLOCKTREE_H */
