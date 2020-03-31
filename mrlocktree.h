@@ -3,9 +3,10 @@
 
 #include <bitset.h>
 #include <mrlock.h>
+#include "searchtree.h"
 #include "treap.h"
 
-class MrlockTree {
+class MrlockTree : SearchTree {
 private:
     struct Node {
         bool isRoute {true};

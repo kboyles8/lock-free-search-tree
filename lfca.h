@@ -4,6 +4,7 @@
 #include <atomic>
 #include <vector>
 
+#include "searchtree.h"
 #include "treap.h"
 #include "preallocatable.h"
 
@@ -112,7 +113,7 @@ struct node : public Preallocatable<node> {
     }
 };
 
-class LfcaTree {
+class LfcaTree : public SearchTree {
 private:
     std::atomic<node *> root{nullptr};
 
