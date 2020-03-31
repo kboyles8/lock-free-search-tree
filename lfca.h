@@ -44,6 +44,14 @@ struct rs : public Preallocatable<rs> {                                 // Resul
 
         return this;
     }
+
+    ~rs() {
+        // Delete the result if it was set
+        vector<int> *result_local = result.load();
+        if (result_local != NOT_SET) {
+            delete result_local;
+        }
+    }
 };
 
 struct node : public Preallocatable<node> {
@@ -109,7 +117,7 @@ private:
     std::atomic<node *> root{nullptr};
 
     bool do_update(Treap *(*u)(Treap *, int, bool *), int i);
-    std::vector<int> *all_in_range(int lo, int hi, rs *help_s);
+    std::vector<int> all_in_range(int lo, int hi, rs *help_s);
     bool try_replace(node *b, node *new_b);
     node *secure_join(node *b, bool left);
     void complete_join(node *m);

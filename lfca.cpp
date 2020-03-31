@@ -200,8 +200,7 @@ bool LfcaTree::lookup(int i) {
 }
 
 vector<int> LfcaTree::rangeQuery(int lo, int hi) {
-    vector<int> *result = all_in_range(lo, hi, nullptr);
-    return *result;  // TODO: memory leak
+    return all_in_range(lo, hi, nullptr);
 }
 
 // Range query helper
@@ -251,7 +250,7 @@ node *new_range_base(node *b, int lo, int hi, rs *s) {
     return new_base;
 }
 
-vector<int> *LfcaTree::all_in_range(int lo, int hi, rs *help_s) {
+vector<int> LfcaTree::all_in_range(int lo, int hi, rs *help_s) {
     stack<node *> s;
     stack<node *> backup_s;
     vector<node *> done;
@@ -262,7 +261,7 @@ find_first:
     b = find_base_stack(root.load(), lo, &s);
     if (help_s != nullptr) {
         if (b->type != range || help_s != b->storage) {
-            return help_s->result.load();
+            return *help_s->result.load();
         }
         else {
             my_s = help_s;
@@ -306,7 +305,7 @@ find_first:
             break;
         }
         else if (my_s->result.load() != NOT_SET) {
-            return my_s->result.load();
+            return *my_s->result.load();
         }
         else if (b->type == range && b->storage == my_s) {
             continue;
@@ -338,14 +337,20 @@ find_first:
     }
 
     vector<int> *expectedResult = NOT_SET;
-    if (my_s->result.compare_exchange_strong(expectedResult, res) && done.size() > 1) {
-        my_s->more_than_one_base.store(true);
+    if (my_s->result.compare_exchange_strong(expectedResult, res)) {
+        if (done.size() > 1) {
+            my_s->more_than_one_base.store(true);
+        }
+    }
+    else {
+        // The result set was already stored. Clean up the local result
+        delete res;
     }
 
     // This call, which randomly adapts a base node from the range query, is ignored.
     // adapt_if_needed(t, done->array[r() % done->size]);
 
-    return my_s->result.load();
+    return *my_s->result.load();
 }
 
 // Contention adaptation
