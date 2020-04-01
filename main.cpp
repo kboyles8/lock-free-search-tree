@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "lfca.h"
+#include "mrlocktree.h"
 
 #define MAX_THREADS 32
 #define NUM_OPS 200000
@@ -12,6 +13,12 @@
 #define MAX_TREAPS_NEEDED (2 * NUM_OPS)
 #define MAX_NODES_NEEDED (32 * NUM_OPS)
 #define MAX_RESULT_SETS_NEEDED (2 * NUM_OPS)
+
+/**
+ * The maximum number of threads that MRLock will support.
+ * This is a hard-coded cap in the implementation that cannot be changed.
+ */
+const int maxMrlockThreads = std::thread::hardware_concurrency();
 
 using namespace std;
 using namespace std::chrono;
@@ -95,7 +102,7 @@ struct RandomOpVals {
 };
 
 // TODO: handle the possibility of running out of preallocated elements. At the very least, report this in a meaningful way, asking to re-run the program.
-static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) {
+static void mixedThread(SearchTree *tree, int numOps, RandomOpVals *randomOpVals) {
     int op;
     for (int i = 0; i < numOps; i++) {
         op = randomOpVals->randomOps.at(i);
@@ -120,7 +127,7 @@ static void mixedThread(LfcaTree *tree, int numOps, RandomOpVals *randomOpVals) 
     }
 }
 
-static double RunPerformanceTest(LfcaTree *tree, OpWeights weights, int numThreads) {
+static double RunPerformanceTest(SearchTree *tree, OpWeights weights, int numThreads) {
     vector<thread> threads;
 
     int opsPerThread = NUM_OPS / numThreads;
@@ -156,6 +163,7 @@ int main(void) {
 
     for (OpWeights weights : opWeights) {
         double lfcaResults[MAX_THREADS];
+        double mrlockResults[maxMrlockThreads];
 
         cout << "Running " << NUM_OPS << " random operations total on 1 to " << MAX_THREADS << " threads. Weights: (insert: "
             << weights.insertWeight << ", remove: " << weights.removeWeight << ", lookup: " << weights.lookupWeight << ", range query: " << weights.rangeQueryWeight << ")..." << endl;
@@ -168,12 +176,21 @@ int main(void) {
             rs::Preallocate(MAX_RESULT_SETS_NEEDED);
 
             LfcaTree lfcaTree;
-
             lfcaResults[iThread-1] = RunPerformanceTest(&lfcaTree, weights, iThread);
 
             Treap::Deallocate();
             node::Deallocate();
             rs::Deallocate();
+
+            // MRLock is internally capped with the number of threads it will allow. Don't exceed this limit, as it causes crashes/hangs
+            if (iThread <= maxMrlockThreads) {
+                Treap::Preallocate(MAX_TREAPS_NEEDED);
+
+                MrlockTree mrlockTree;
+                mrlockResults[iThread-1] = RunPerformanceTest(&mrlockTree, weights, iThread);
+
+                Treap::Deallocate();
+            }
 
             cout << "\r";
         }
@@ -183,6 +200,11 @@ int main(void) {
         cout << "LFCA, ";
         for (int iThread = 0; iThread < MAX_THREADS; iThread++) {
             cout << to_string(lfcaResults[iThread]) << (iThread < MAX_THREADS - 1 ? ", " : "");
+        }
+        cout << endl;
+        cout << "MRLOCK, ";
+        for (int iThread = 0; iThread < maxMrlockThreads; iThread++) {
+            cout << to_string(mrlockResults[iThread]) << (iThread < maxMrlockThreads - 1 ? ", " : "");
         }
         cout << endl << endl;
     }
