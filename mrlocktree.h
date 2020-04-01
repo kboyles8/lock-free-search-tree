@@ -6,7 +6,7 @@
 #include "searchtree.h"
 #include "treap.h"
 
-class MrlockTree : SearchTree {
+class MrlockTree : public SearchTree {
 private:
     struct Node {
         bool isRoute {true};
