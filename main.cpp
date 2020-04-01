@@ -35,12 +35,14 @@ struct OpWeights {
     double removeWeight;
     double lookupWeight;
     double rangeQueryWeight;
+    int rangeQuerySize;
 
-    OpWeights(double insertWeight, double removeWeight, double lookupWeight, double rangeQueryWeight) {
+    OpWeights(double insertWeight, double removeWeight, double lookupWeight, double rangeQueryWeight, int rangeQuerySize) {
         this->insertWeight = insertWeight;
         this->removeWeight = removeWeight;
         this->lookupWeight = lookupWeight;
         this->rangeQueryWeight = rangeQueryWeight;
+        this->rangeQuerySize = rangeQuerySize;
     }
 };
 
@@ -64,6 +66,9 @@ struct RandomOpVals {
         // Create distribution of operations
         discrete_distribution<int> opDist {weights.insertWeight, weights.removeWeight, weights.lookupWeight, weights.rangeQueryWeight};
 
+        // Create range query distribution based on the range query size. This ensures the range never exceeds the max integer value
+        uniform_int_distribution<int> rqDist {numeric_limits<int>::min(), numeric_limits<int>::max() - weights.rangeQuerySize};
+
         // Pre-allocate space
         randomOps.reserve(numOps);
         insertVals.reserve(numOps);
@@ -76,18 +81,10 @@ struct RandomOpVals {
         for (int i = 0; i < numOps; i++) {
             insertVals.push_back(valDist(randEngine));
 
-            int rangeQueryA = valDist(randEngine);
-            int rangeQueryB = valDist(randEngine);
+            int rangeQueryMin = rqDist(randEngine);
 
-            // Ensure the smaller random value is placed in the min range query vector
-            if (rangeQueryA > rangeQueryB) {
-                int temp = rangeQueryA;
-                rangeQueryA = rangeQueryB;
-                rangeQueryB = temp;
-            }
-
-            rangeQueryMinVals.push_back(rangeQueryA);
-            rangeQueryMaxVals.push_back(rangeQueryB);
+            rangeQueryMinVals.push_back(rangeQueryMin);
+            rangeQueryMaxVals.push_back(rangeQueryMin + weights.rangeQuerySize);
 
             // Generate random op
             randomOps.push_back(opDist(randEngine));
@@ -157,19 +154,22 @@ static double RunPerformanceTest(SearchTree *tree, OpWeights weights, int numThr
 int main(void) {
     // Set up test weights
     vector<OpWeights> opWeights;
-    opWeights.push_back(OpWeights(0.25, 0.25, 0.50, 0.00));  // w:50% r:50%
-    opWeights.push_back(OpWeights(0.10, 0.10, 0.80, 0.00));  // w:20% r:80%
-    opWeights.push_back(OpWeights(0.005, 0.005, 0.99, 0.00));  // w:1% r:99%
+    opWeights.push_back(OpWeights(0.25, 0.25, 0.50, 0.00, 0));  // w:50% r:50%
+    opWeights.push_back(OpWeights(0.10, 0.10, 0.80, 0.00, 0));  // w:20% r:80%
+    opWeights.push_back(OpWeights(0.005, 0.005, 0.99, 0.00, 0));  // w:1% r:99%
+    opWeights.push_back(OpWeights(0.10, 0.10, 0.55, 0.25, 10));  // w:20% r:55% q:25%-10
+    opWeights.push_back(OpWeights(0.10, 0.10, 0.55, 0.25, 1000));  // w:20% r:55% q:25%-1000
+    opWeights.push_back(OpWeights(0.10, 0.10, 0.55, 0.25, 100000));  // w:20% r:55% q:25%-100000
 
     for (OpWeights weights : opWeights) {
         double lfcaResults[MAX_THREADS];
         double mrlockResults[maxMrlockThreads];
 
         cout << "Running " << NUM_OPS << " random operations total on 1 to " << MAX_THREADS << " threads. Weights: (insert: "
-            << weights.insertWeight << ", remove: " << weights.removeWeight << ", lookup: " << weights.lookupWeight << ", range query: " << weights.rangeQueryWeight << ")..." << endl;
+            << weights.insertWeight << ", remove: " << weights.removeWeight << ", lookup: " << weights.lookupWeight << ", range query: " << weights.rangeQueryWeight << " (Size " << weights.rangeQuerySize << "))..." << endl;
 
         for (int iThread = 1; iThread <= MAX_THREADS; iThread++) {
-            cout << "Running with " << iThread << " thread(s)...";
+            cout << "Running with " << iThread << " thread(s)..." << flush;
 
             Treap::Preallocate(MAX_TREAPS_NEEDED);
             node::Preallocate(MAX_NODES_NEEDED);
