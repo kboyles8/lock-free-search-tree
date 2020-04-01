@@ -6,8 +6,8 @@
 #include "mrlocktree.h"
 
 const int Empty = numeric_limits<int>::min();
-const int TreapSplitThreshold = 64;
-const int TreapMergeThreshold = 32;
+const int TreapSplitThreshold = TREAP_NODES;
+const int TreapMergeThreshold = TREAP_NODES / 2;
 
 using namespace std;
 
@@ -80,7 +80,6 @@ void MrlockTree::insert(int val) {
         temp->left = left;
         temp->right = right;
 
-        delete(temp->treap);
         temp->treap = nullptr;
     }
 }
@@ -118,11 +117,9 @@ bool MrlockTree::remove(int val) {
             tempParent->treap = Treap::merge(tempParent->left->treap, tempParent->right->treap);
             tempParent->isRoute = false;
 
-            delete(tempParent->left->treap);
             delete(tempParent->left);
             tempParent->left = nullptr;
 
-            delete(tempParent->right->treap);
             delete(tempParent->right);
             tempParent->right = nullptr;
         }
