@@ -4,7 +4,7 @@
  * modification to format and syntax for use with the C++ project.
  *
  * Major modifications:
- * The node struct now inherits route_node (as was likely intended)
+ * The node structs are combined into a single struct
  * C utilities used in the original implementation, such as stack, now use C++ standard library variants
  * Range query results are stored in vectors instead of treaps
  * Our custom immutable treaps are used in place of the original
