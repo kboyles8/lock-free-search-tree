@@ -98,29 +98,35 @@ struct RandomOpVals {
     }
 };
 
-// TODO: handle the possibility of running out of preallocated elements. At the very least, report this in a meaningful way, asking to re-run the program.
 static void mixedThread(SearchTree *tree, int numOps, RandomOpVals *randomOpVals) {
-    int op;
-    for (int i = 0; i < numOps; i++) {
-        op = randomOpVals->randomOps.at(i);
+    try {
+        int op;
+        for (int i = 0; i < numOps; i++) {
+            op = randomOpVals->randomOps.at(i);
 
-        switch(op) {
-            case INSERT:
-                tree->insert(randomOpVals->insertVals.at(i));
-                break;
+            switch(op) {
+                case INSERT:
+                    tree->insert(randomOpVals->insertVals.at(i));
+                    break;
 
-            case REMOVE:
-                tree->remove(randomOpVals->removeVals.at(i));
-                break;
+                case REMOVE:
+                    tree->remove(randomOpVals->removeVals.at(i));
+                    break;
 
-            case LOOKUP:
-                tree->lookup(randomOpVals->removeVals.at(i));
-                break;
+                case LOOKUP:
+                    tree->lookup(randomOpVals->removeVals.at(i));
+                    break;
 
-            case RANGE_QUERY:
-                tree->rangeQuery(randomOpVals->rangeQueryMinVals.at(i), randomOpVals->rangeQueryMaxVals.at(i));
-                break;
+                case RANGE_QUERY:
+                    tree->rangeQuery(randomOpVals->rangeQueryMinVals.at(i), randomOpVals->rangeQueryMaxVals.at(i));
+                    break;
+            }
         }
+    }
+    catch (out_of_range e) {
+        cout << endl << e.what() << endl;
+        cout << "If this is a preallocation error, try running the program again.";
+        exit(-1);
     }
 }
 
