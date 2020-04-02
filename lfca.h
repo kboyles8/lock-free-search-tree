@@ -105,7 +105,7 @@ struct node : public Preallocatable<node> {
 
         lo = other.lo;
         hi = other.hi;
-        storage = other.storage;  // TODO: should this be copied into a new object instead of linking to the same result storage?
+        storage = other.storage;  // Link to the same result storage, so that all nodes in the same range query contain the result set when it is stored.
 
         type = other.type;
 
