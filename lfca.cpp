@@ -290,11 +290,8 @@ find_first:
         backup_s = s;  // Backup the result set
 
         // Stop looping if this treap is the last treap to consider for the range query
-
-        int maxVal = -1234;
         if (!(b->data->getSize() == 0)) {
-            maxVal = b->data->getMaxValue();
-            if (maxVal >= hi) {
+            if (b->data->getMaxValue() >= hi) {
                 break;
             }
         }
