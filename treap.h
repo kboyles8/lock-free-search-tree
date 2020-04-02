@@ -1,11 +1,13 @@
 #ifndef TREAP_H
 #define TREAP_H
 
+#include "preallocatable.h"
+
 #include <algorithm>
+#include <ctime>
 #include <iterator>
 #include <limits>
 #include <random>
-#include <ctime>
 
 using namespace std;
 
@@ -15,7 +17,7 @@ typedef int TreapIndex;
 const TreapIndex NullNode = -1;
 const TreapIndex ControlNode = TREAP_NODES;  // The extra node allocated beyond the size of the treap
 
-class Treap {
+class Treap : public Preallocatable<Treap> {
 private:
     struct TreapNode {
         int val;
@@ -35,8 +37,6 @@ private:
     int size {0};
     TreapNode nodes[TREAP_NODES + 1];
     TreapIndex root {NullNode};
-
-    Treap(const Treap &other);
 
     void moveNode(TreapIndex srcIndex, TreapIndex dstIndex);
 
@@ -58,16 +58,15 @@ private:
     int getMedianVal();
 
 public:
-    Treap();
-
     Treap *immutableInsert(int val);
-    Treap *immutableRemove(int val);
+    Treap *immutableRemove(int val, bool *success);
 
     bool contains(int val);
 
     vector<int> rangeQuery(int min, int max);
 
     int getSize();
+    int getMaxValue();
 
     static Treap *merge(Treap *left, Treap *right);
     int split(Treap **left, Treap **right);
@@ -76,6 +75,8 @@ public:
     bool sequentialRemove(int val);
 
     int getRoot();
+
+    Treap *operator=(const Treap &other);
 };
 
 #endif /* TREAP_H */

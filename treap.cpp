@@ -1,9 +1,9 @@
 /**
  * @file treap.cpp
- * 
+ *
  * An immutable treap that stores integers. The immutable operations are thread safe.
  * Algorithms based on pseudo-code from https://algorithmtutor.com/Data-Structures/Tree/Treaps/
- * 
+ *
  */
 
 #include "treap.h"
@@ -11,23 +11,23 @@
 static const int NegInfinity = numeric_limits<int>::min();
 static const int PosInfinity = numeric_limits<int>::max();
 
-static thread_local mt19937 randEngine {(unsigned int)time(NULL)};
-static uniform_int_distribution<int> weightDist {NegInfinity + 1, PosInfinity - 1};
-
-Treap::Treap() {};
+static thread_local mt19937 randEngine{(unsigned int)time(NULL)};
+static uniform_int_distribution<int> weightDist{NegInfinity + 1, PosInfinity - 1};
 
 /**
- * Creates a new Treap as a copy of another treap
- * 
+ * Copies another Treap
+ *
  * @param other
  * The treap to copy
  */
-Treap::Treap(const Treap &other) {
+Treap *Treap::operator=(const Treap &other) {
     // Copy nodes from other to self
     copy(begin(other.nodes), end(other.nodes), begin(nodes));
 
     size = other.size;
     root = other.root;
+
+    return this;
 }
 
 /**
@@ -344,7 +344,7 @@ void Treap::bstInsert(TreapIndex index) {
  * 
  * @param val
  * The value to find
- * 
+ *
  * @return TreapIndex
  * The index of the node containing the search value, or NullNode if it could not be found
  */
@@ -490,7 +490,7 @@ int Treap::getMedianVal() {
  */
 Treap *Treap::immutableInsert(int val) {
     // Copy the current object
-    Treap *newTreap = new Treap(*this);
+    Treap *newTreap = Treap::New(*this);
 
     // Insert the value in the copy
     newTreap->insert(val);
@@ -503,16 +503,19 @@ Treap *Treap::immutableInsert(int val) {
  * 
  * @param val
  * The value to remove
- * 
+ *
+ * @param success
+ * The location to store whether the remove was a success
+ *
  * @return Treap*
  * A pointer to a copy of the treap with the value removed
  */
-Treap *Treap::immutableRemove(int val) {
+Treap *Treap::immutableRemove(int val, bool *success) {
     // Copy the current object
-    Treap *newTreap = new Treap(*this);
+    Treap *newTreap = Treap::New(*this);
 
     // Remove the value from the copy
-    newTreap->remove(val);
+    *success = newTreap->remove(val);
 
     return newTreap;
 }
@@ -584,7 +587,6 @@ vector<int> Treap::rangeQuery(int min, int max) {
     return values;
 }
 
-
 /**
  * Returns the size of the treap
  * 
@@ -593,6 +595,26 @@ vector<int> Treap::rangeQuery(int min, int max) {
  */
 int Treap::getSize() {
     return size;
+}
+
+/**
+ * Get the maximum value stored in this treap
+ *
+ * @return int
+ * The maximum value in the treap
+ */
+int Treap::getMaxValue() {
+    if (size == 0) {
+        throw logic_error("Cannot get the maximum value of an empty treap");
+    }
+
+    // Find the rightmost node
+    TreapIndex tempIndex = root;
+    while (nodes[tempIndex].right != NullNode) {
+        tempIndex = nodes[tempIndex].right;
+    }
+
+    return nodes[tempIndex].val;
 }
 
 /**
@@ -614,7 +636,7 @@ Treap *Treap::merge(Treap *left, Treap *right) {
         throw invalid_argument("Merging these treaps would overflow the new treap. (Sizes: " + to_string(left->size) + ", " + to_string(right->size) + ")");
     }
 
-    Treap *mergedTreap = new Treap();
+    Treap *mergedTreap = Treap::New();
 
     // If there are no elements in the Treaps, just return an empty Treap
     if (newSize == 0) {
@@ -688,8 +710,8 @@ int Treap::split(Treap **left, Treap **right) {
         throw logic_error("An empty treap cannot be split");
     }
 
-    *left = new Treap();
-    *right = new Treap();
+    *left = Treap::New();
+    *right = Treap::New();
     int splitVal = getMedianVal();
 
     // Copy the current treap so it can be modified (the current treap should not be changed)

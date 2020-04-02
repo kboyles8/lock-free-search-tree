@@ -2,133 +2,142 @@
 
 #include "../treap.h"
 
+#define MAX_TREAPS_NEEDED (TREAP_NODES * 2 + 1)  // FillingAndEmptying
+
 class TreapTest : public ::testing::Test {
 protected:
-    Treap treap;
+    Treap *treap {nullptr};
     Treap *left {nullptr};
     Treap *right {nullptr};
     Treap *merged {nullptr};
 
-    // void SetUp() override { }
+    void SetUp() override {
+        Treap::Preallocate(MAX_TREAPS_NEEDED);
+
+        treap = Treap::New();
+    }
     void TearDown() override {
-        // Free trees if allocated
-        if (left != nullptr) {
-            delete(left);
-        }
-        if (right != nullptr) {
-            delete(right);
-        }
-        if (merged != nullptr) {
-            delete(merged);
-        }
+        Treap::Deallocate();
+    }
+
+    void insertHelper(int val) {
+        treap = treap->immutableInsert(val);
+    }
+
+    bool removeHelper(int val) {
+        bool success;
+
+        treap = treap->immutableRemove(val, &success);
+
+        return success;
     }
 };
 
 TEST_F(TreapTest, InsertAndRemove) {
-    EXPECT_EQ(0, treap.getSize());
+    EXPECT_EQ(0, treap->getSize());
 
-    treap.sequentialInsert(5);
-    EXPECT_EQ(1, treap.getSize());
+    insertHelper(5);
+    EXPECT_EQ(1, treap->getSize());
 
-    treap.sequentialInsert(3);
-    ASSERT_EQ(2, treap.getSize());
+    insertHelper(3);
+    ASSERT_EQ(2, treap->getSize());
 
-    treap.sequentialRemove(5);
-    EXPECT_EQ(1, treap.getSize());
+    removeHelper(5);
+    EXPECT_EQ(1, treap->getSize());
 
-    treap.sequentialRemove(3);
-    EXPECT_EQ(0, treap.getSize());
+    removeHelper(3);
+    EXPECT_EQ(0, treap->getSize());
 }
 
 TEST_F(TreapTest, Contains) {
-    EXPECT_FALSE(treap.contains(1));
-    treap.sequentialInsert(1);
-    ASSERT_TRUE(treap.contains(1));
+    EXPECT_FALSE(treap->contains(1));
+    insertHelper(1);
+    ASSERT_TRUE(treap->contains(1));
 
-    EXPECT_FALSE(treap.contains(2));
-    treap.sequentialInsert(2);
-    ASSERT_TRUE(treap.contains(2));
+    EXPECT_FALSE(treap->contains(2));
+    insertHelper(2);
+    ASSERT_TRUE(treap->contains(2));
 
-    EXPECT_TRUE(treap.contains(1));
-    EXPECT_TRUE(treap.sequentialRemove(1));
-    ASSERT_FALSE(treap.contains(1));
+    EXPECT_TRUE(treap->contains(1));
+    EXPECT_TRUE(removeHelper(1));
+    ASSERT_FALSE(treap->contains(1));
 
-    EXPECT_TRUE(treap.contains(2));
-    EXPECT_TRUE(treap.sequentialRemove(2));
-    ASSERT_FALSE(treap.contains(2));
+    EXPECT_TRUE(treap->contains(2));
+    EXPECT_TRUE(removeHelper(2));
+    ASSERT_FALSE(treap->contains(2));
 }
 
 TEST_F(TreapTest, RemoveNonExisting) {
-    EXPECT_FALSE(treap.contains(1));
-    EXPECT_FALSE(treap.contains(2));
-    EXPECT_EQ(0, treap.getSize());
+    EXPECT_FALSE(treap->contains(1));
+    EXPECT_FALSE(treap->contains(2));
+    EXPECT_EQ(0, treap->getSize());
 
-    treap.sequentialInsert(1);
-    treap.sequentialInsert(2);
+    insertHelper(1);
+    insertHelper(2);
 
-    EXPECT_TRUE(treap.contains(1));
-    EXPECT_TRUE(treap.contains(2));
-    ASSERT_EQ(2, treap.getSize());
+    EXPECT_TRUE(treap->contains(1));
+    EXPECT_TRUE(treap->contains(2));
+    ASSERT_EQ(2, treap->getSize());
 
-    EXPECT_FALSE(treap.sequentialRemove(3));
-    EXPECT_EQ(2, treap.getSize());
-    EXPECT_TRUE(treap.contains(1));
-    EXPECT_TRUE(treap.contains(2));
+    EXPECT_FALSE(removeHelper(3));
+    EXPECT_EQ(2, treap->getSize());
+    EXPECT_TRUE(treap->contains(1));
+    EXPECT_TRUE(treap->contains(2));
 }
 
 TEST_F(TreapTest, FillingToLimit) {
-    ASSERT_EQ(treap.getSize(), 0);
+    ASSERT_EQ(treap->getSize(), 0);
 
     for (int i = 1; i <= TREAP_NODES; i++) {
-        treap.sequentialInsert(i);
-        ASSERT_EQ(i, treap.getSize());
-        ASSERT_TRUE(treap.contains(i));
+        insertHelper(i);
+        ASSERT_EQ(i, treap->getSize());
+        ASSERT_TRUE(treap->contains(i));
     }
 
     // The treap is now full. New elements can't be added
     bool correctException = false;
     try {
-        treap.sequentialInsert(TREAP_NODES + 1);
+        insertHelper(TREAP_NODES + 1);
     } catch (out_of_range e) {
         correctException = true;
     } catch (...) { }
 
     EXPECT_TRUE(correctException);
-    EXPECT_EQ(TREAP_NODES, treap.getSize());
-    EXPECT_FALSE(treap.contains(TREAP_NODES + 1));
+    EXPECT_EQ(TREAP_NODES, treap->getSize());
+    EXPECT_FALSE(treap->contains(TREAP_NODES + 1));
 }
 
 TEST_F(TreapTest, FillingAndEmptying) {
-    ASSERT_EQ(treap.getSize(), 0);
+    ASSERT_EQ(treap->getSize(), 0);
 
     // Fill the treap
     for (int i = 1; i <= TREAP_NODES; i++) {
-        treap.sequentialInsert(i);
-        ASSERT_EQ(i, treap.getSize());
-        ASSERT_TRUE(treap.contains(i));
+        insertHelper(i);
+        ASSERT_EQ(i, treap->getSize());
+        ASSERT_TRUE(treap->contains(i));
     }
 
     // Empty the treap
     for (int i = 1; i <= TREAP_NODES; i++) {
-        ASSERT_TRUE(treap.sequentialRemove(i));
-        ASSERT_EQ(TREAP_NODES - i, treap.getSize());
-        ASSERT_FALSE(treap.contains(i));
+        ASSERT_TRUE(removeHelper(i));
+        ASSERT_EQ(TREAP_NODES - i, treap->getSize());
+        ASSERT_FALSE(treap->contains(i));
     }
 }
 
 TEST_F(TreapTest, FullSplit) {
-    ASSERT_EQ(treap.getSize(), 0);
+    ASSERT_EQ(treap->getSize(), 0);
 
     // Fill the treap
     for (int i = 1; i <= TREAP_NODES; i++) {
-        treap.sequentialInsert(i);
-        ASSERT_EQ(i, treap.getSize());
-        ASSERT_TRUE(treap.contains(i));
+        insertHelper(i);
+        ASSERT_EQ(i, treap->getSize());
+        ASSERT_TRUE(treap->contains(i));
     }
     int medianVal = (TREAP_NODES + 1) / 2;
 
     // Split the treap
-    int actualSplit = treap.split(&left, &right);
+    int actualSplit = treap->split(&left, &right);
 
     // The split is non-deterministic, but there are certain properties that must hold. Test for these
 
@@ -166,12 +175,12 @@ TEST_F(TreapTest, FullSplit) {
 }
 
 TEST_F(TreapTest, SplitEmpty) {
-    ASSERT_EQ(treap.getSize(), 0);
+    ASSERT_EQ(treap->getSize(), 0);
 
     // Empty treaps can't be split
     bool correctException = false;
     try {
-        treap.split(&left, &right);
+        treap->split(&left, &right);
     } catch (logic_error e) {
         correctException = true;
     } catch (...) { }
@@ -182,8 +191,8 @@ TEST_F(TreapTest, SplitEmpty) {
 }
 
 TEST_F(TreapTest, MergeFull) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());
@@ -213,8 +222,8 @@ TEST_F(TreapTest, MergeFull) {
 }
 
 TEST_F(TreapTest, MergeEmpty) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());
@@ -225,8 +234,8 @@ TEST_F(TreapTest, MergeEmpty) {
 }
 
 TEST_F(TreapTest, MergeLeftEmpty) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());
@@ -242,8 +251,8 @@ TEST_F(TreapTest, MergeLeftEmpty) {
 }
 
 TEST_F(TreapTest, MergeRightEmpty) {
-    left = new Treap();
-    right = new Treap();
+    left = Treap::New();
+    right = Treap::New();
 
     ASSERT_EQ(0, left->getSize());
     ASSERT_EQ(0, right->getSize());

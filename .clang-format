@@ -1,0 +1,35 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 0
+SpacesBeforeTrailingComments: 2
+
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+
+Language: Cpp
+# Force pointers to the right for C++.
+DerivePointerAlignment: false
+PointerAlignment: Right
+IndentCaseLabels: true
+
+# SpaceBeforeCpp11BracedList: true
+# SpaceBeforeCtorInitializerColon: true
+Cpp11BracedListStyle: true
+# SpaceInEmptyBlock: true
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  # AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: true
+  # BeforeLambdaBody: false
+  IndentBraces: false
